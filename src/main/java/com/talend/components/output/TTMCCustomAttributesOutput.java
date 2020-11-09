@@ -184,9 +184,10 @@ public class TTMCCustomAttributesOutput implements Serializable {
     int setAttributesTDCRestCall(Record record) throws Exception{
         URL url = new URL(TDC_Endpoint + "/repository/setAttributes");
 
-        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 8888));
+        // Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 8888));
+        // HttpURLConnection con = (HttpURLConnection) url.openConnection(proxy);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
-        HttpURLConnection con = (HttpURLConnection) url.openConnection(proxy);
         con.setDoOutput(true);
         //con.setDoInput(true);
         con.setRequestMethod("PUT");
