@@ -9,6 +9,7 @@ import java.util.Map;
 import com.talend.components.dataset.CustomDataset;
 
 import org.talend.sdk.component.api.configuration.Option;
+import org.talend.sdk.component.api.configuration.action.BuiltInSuggestable;
 import org.talend.sdk.component.api.configuration.action.Proposable;
 import org.talend.sdk.component.api.configuration.action.Suggestable;
 import org.talend.sdk.component.api.configuration.constraint.Required;
@@ -74,6 +75,7 @@ public class TTMCCustomAttributesOutputConfiguration implements Serializable {
         public String options1;
 
         @Option
+        @BuiltInSuggestable(value = BuiltInSuggestable.Name.INCOMING_SCHEMA_ENTRY_NAMES)
         @Documentation("")
         public String options2;
 

@@ -4,6 +4,7 @@ import com.talend.components.dataset.CustomDataset;
 import com.talend.components.datastore.CustomDatastore;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.Proposable;
+import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.completion.DynamicValues;
 import org.talend.sdk.component.api.service.completion.SuggestionValues;
@@ -11,6 +12,7 @@ import org.talend.sdk.component.api.service.completion.Suggestions;
 import org.talend.sdk.component.api.service.completion.Values;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheck;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus;
+import org.talend.sdk.component.api.service.schema.DiscoverSchema;
 
 import java.util.Arrays;
 
@@ -35,7 +37,7 @@ public class TTDCCustomAttributesService {
     }
 
     @Suggestions("suggestionsProvider")
-    public SuggestionValues sugestions() {
+    public SuggestionValues suggestions() {
         SuggestionValues suggestions = new SuggestionValues();
         suggestions.setItems(Arrays
                 .asList(new SuggestionValues.Item("1", "Delete"), new SuggestionValues.Item("2", "Insert"),
@@ -43,6 +45,21 @@ public class TTDCCustomAttributesService {
         return suggestions;
     }
 
+    @Suggestions("builtInSuggestable")
+    public SuggestionValues builtInSuggestions() {
+        SuggestionValues suggestions = new SuggestionValues();
+        suggestions.setItems(Arrays
+                .asList(new SuggestionValues.Item("1", "Delete"), new SuggestionValues.Item("2", "Insert"),
+                        new SuggestionValues.Item("3", "Update")));
+        return suggestions;
+    }
+
+    /*
+    @DiscoverSchema
+    public Schema guessSchema(@Option MyDataset dataset, final MyDataLoaderService myCustomService) {
+        return myCustomService.loadFirstData().getRecord().getSchema();
+    }
+*/
     @HealthCheck
     public HealthCheckStatus testConnection(CustomDatastore datastore) {
 
