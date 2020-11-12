@@ -4,15 +4,13 @@ import static org.talend.sdk.component.api.component.Icon.IconType.CUSTOM;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import com.talend.components.dataset.CustomDataset;
+import com.talend.components.dataset.TDCDataset;
 import com.talend.utilities.ParameterStringBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,27 +29,37 @@ import com.talend.components.service.TTDCCustomAttributesService;
 import org.talend.sdk.component.api.record.Schema;
 
 @Version(1) // default version is 1, if some configuration changes happen between 2 versions you can add a migrationHandler
-@Icon(value = CUSTOM, custom = "tTMCCustomAttributesOutput") // icon is located at src/main/resources/icons/tTMCCustomAttributesOutput.svg
-@Processor(name = "Output")
+@Icon(value = CUSTOM, custom = "tTDCCustomAttributesOutput") // icon is located at src/main/resources/icons/tTDCCustomAttributesOutput.svg
+@Processor(name = "CustomAttributesOutput")
 @Documentation("TODO fill the documentation for this processor")
-public class TTMCCustomAttributesOutput implements Serializable {
-    private final TTMCCustomAttributesOutputConfiguration configuration;
+public class TTDCCustomAttributesOutput implements Serializable {
+    private final TTDCCustomAttributesOutputConfiguration configuration;
     private final TTDCCustomAttributesService service;
 
-    private CustomDataset dataset;
+    private TDCDataset dataset;
 
-    String TDC_Endpoint = "http://localhost:11480/MM/rest/v1";
-    String TDC_username = "Administrator";
-    String TDC_password = "Administrator";
+    String TDC_Endpoint;
+    String TDC_username;
+    String TDC_password;
 
-    String TDC_ObjectID = "AAAEBADDDHj3dSV6ezKACGvnt3Kwrh3pAA";
+    String TDC_ObjectID;
+
+    //List<TTDCCustomAttributesOutputConfiguration.MyObject> TDC_Attributes;
 
     String token = "";
 
-    public TTMCCustomAttributesOutput(@Option("configuration") final TTMCCustomAttributesOutputConfiguration configuration,
-                          final TTDCCustomAttributesService service) {
+    public TTDCCustomAttributesOutput(@Option("configuration") final TTDCCustomAttributesOutputConfiguration configuration,
+                                      final TTDCCustomAttributesService service) {
+
         this.configuration = configuration;
         this.service = service;
+/*        this.dataset = configuration.getDataset();
+        this.TDC_Endpoint = dataset.getDatastore().getTDC_Endpoint();
+        this.TDC_username = dataset.getDatastore().getTDC_username();
+        this.TDC_password = dataset.getDatastore().getTDC_password();
+        this.TDC_ObjectID = configuration.TDC_ObjectID;
+        this.TDC_Attributes = configuration.TDC_Attributes;
+*/
     }
 
     @PostConstruct
@@ -115,15 +123,17 @@ public class TTMCCustomAttributesOutput implements Serializable {
             String name = entry.getName();
             String value = record.getString(name);
 
-            JSONObject jsonValue = new JSONObject();
-            JSONObject jsonAttributeType = new JSONObject();
+            //if (TDC_Attributes.contains(new TTDCCustomAttributesOutputConfiguration.TDCAttribute(name))) {
+                JSONObject jsonValue = new JSONObject();
+                JSONObject jsonAttributeType = new JSONObject();
 
-            jsonAttributeType.put("type", "CUSTOM_ATTRIBUTE");
-            jsonAttributeType.put("name", name);
+                jsonAttributeType.put("type", "CUSTOM_ATTRIBUTE");
+                jsonAttributeType.put("name", name);
 
-            jsonValue.put("attributeType", jsonAttributeType);
-            jsonValue.put("value", value);
-            jsonValues.put(jsonValue);
+                jsonValue.put("attributeType", jsonAttributeType);
+                jsonValue.put("value", value);
+                jsonValues.put(jsonValue);
+            //}
 
         }
 
@@ -138,23 +148,22 @@ public class TTMCCustomAttributesOutput implements Serializable {
 
     String loginTDCRestCall() throws Exception {
         String auth_path = "/auth/login";
-        //URL url = new URL(TDC_Endpoint + "/auth/login");
-        URL url = new URL("http://localhost:11480/MM/rest/v1/auth/login?user=Administrator&password=Administrator");
+        URL url = new URL(TDC_Endpoint + auth_path);
+        //URL url = new URL("http://localhost:11480/MM/rest/v1/auth/login?user=Administrator&password=Administrator");
 
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
-            /*
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put("user", TDC_username);
-            parameters.put("password", TDC_password);
+        con.setDoOutput(true);
 
-            con.setDoOutput(true);
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("user", TDC_username);
+        parameters.put("password", TDC_password);
 
-            DataOutputStream out = new DataOutputStream(con.getOutputStream());
-            out.writeBytes(ParameterStringBuilder.getParamsString(parameters));
-            out.flush();
-            out.close();
-*/
+        DataOutputStream out = new DataOutputStream(con.getOutputStream());
+        out.writeBytes(ParameterStringBuilder.getParamsString(parameters));
+        out.flush();
+        out.close();
+
         int responsecode = con.getResponseCode();
 
         if (responsecode != 200) {
@@ -214,7 +223,7 @@ public class TTMCCustomAttributesOutput implements Serializable {
     }
 
     public static void main(String[] args) {
-        // new TTMCCustomAttributesOutput(new TTMCCustomAttributesOutputConfiguration(), new TTDCCustomAttributesService()).onNext(r);
+        // new TTDCCustomAttributesOutput(new TTDCCustomAttributesOutputConfiguration(), new TTDCCustomAttributesService()).onNext(r);
     }
 
 }

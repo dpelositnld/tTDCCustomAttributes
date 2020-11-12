@@ -1,10 +1,8 @@
 package com.talend.components.service;
 
-import com.talend.components.dataset.CustomDataset;
-import com.talend.components.datastore.CustomDatastore;
+import com.talend.components.dataset.TDCDataset;
+import com.talend.components.datastore.TDCDatastore;
 import org.talend.sdk.component.api.configuration.Option;
-import org.talend.sdk.component.api.configuration.action.Proposable;
-import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.completion.DynamicValues;
 import org.talend.sdk.component.api.service.completion.SuggestionValues;
@@ -12,7 +10,6 @@ import org.talend.sdk.component.api.service.completion.Suggestions;
 import org.talend.sdk.component.api.service.completion.Values;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheck;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus;
-import org.talend.sdk.component.api.service.schema.DiscoverSchema;
 
 import java.util.Arrays;
 
@@ -21,7 +18,7 @@ public class TTDCCustomAttributesService {
 
     // you can put logic here you can reuse in components
     @Suggestions("loadModules")
-    public SuggestionValues loadModules(@Option final CustomDataset dataset) {
+    public SuggestionValues loadModules(@Option final TDCDataset dataset) {
         //dataset.
         return new SuggestionValues(false,
                 Arrays
@@ -61,7 +58,7 @@ public class TTDCCustomAttributesService {
     }
 */
     @HealthCheck
-    public HealthCheckStatus testConnection(CustomDatastore datastore) {
+    public HealthCheckStatus testConnection(TDCDatastore datastore) {
 
         if (datastore == null || datastore.getTDC_username().equals("invalidtest")) {
             return new HealthCheckStatus(HealthCheckStatus.Status.KO, "Connection not ok, datastore can't be null");
