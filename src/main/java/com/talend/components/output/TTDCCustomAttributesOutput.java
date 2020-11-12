@@ -4,6 +4,8 @@ import static org.talend.sdk.component.api.component.Icon.IconType.CUSTOM;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
 
@@ -38,13 +40,13 @@ public class TTDCCustomAttributesOutput implements Serializable {
 
     private TDCDataset dataset;
 
-    String TDC_Endpoint;
-    String TDC_username;
-    String TDC_password;
+    String TDCEndpoint;
+    String TDCUsername;
+    String TDCPassword;
 
-    String TDC_ObjectID;
+    String TDCObjectID;
 
-    //List<TTDCCustomAttributesOutputConfiguration.MyObject> TDC_Attributes;
+    List<TTDCCustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes;
 
     String token = "";
 
@@ -53,13 +55,12 @@ public class TTDCCustomAttributesOutput implements Serializable {
 
         this.configuration = configuration;
         this.service = service;
-/*        this.dataset = configuration.getDataset();
-        this.TDC_Endpoint = dataset.getDatastore().getTDC_Endpoint();
-        this.TDC_username = dataset.getDatastore().getTDC_username();
-        this.TDC_password = dataset.getDatastore().getTDC_password();
-        this.TDC_ObjectID = configuration.TDC_ObjectID;
-        this.TDC_Attributes = configuration.TDC_Attributes;
-*/
+        this.dataset = configuration.getDataset();
+        this.TDCEndpoint = dataset.getDatastore().getTDC_Endpoint();
+        this.TDCUsername = dataset.getDatastore().getTDC_username();
+        this.TDCPassword = dataset.getDatastore().getTDC_password();
+        this.TDCObjectID = configuration.TDCObjectID;
+        this.TDCAttributes = configuration.TDCAttributes;
     }
 
     @PostConstruct
@@ -85,9 +86,6 @@ public class TTDCCustomAttributesOutput implements Serializable {
 
         try {
             token = loginTDCRestCall();
-
-            System.out.println(token);
-
             setAttributesTDCRestCall(defaultInput);
         } catch (Exception e) {
             e.printStackTrace();
@@ -108,7 +106,7 @@ public class TTDCCustomAttributesOutput implements Serializable {
         // Note: if you don't need it you can delete it
     }
 
-    String buildSetAttributesTDCRestBody(Record record) throws Exception{
+    String buildSetAttributesTDCRestBody(Record record) {
         String message;
         JSONObject jsonSetAttributes = new JSONObject();
 
@@ -117,13 +115,11 @@ public class TTDCCustomAttributesOutput implements Serializable {
         Schema schema = record.getSchema();
         List<Schema.Entry> entries = schema.getEntries();
 
-        Iterator<Schema.Entry> entryIterator = entries.iterator();
-        while (entryIterator.hasNext()) {
-            Schema.Entry entry = entryIterator.next();
+        for (Schema.Entry entry: entries) {
             String name = entry.getName();
             String value = record.getString(name);
 
-            //if (TDC_Attributes.contains(new TTDCCustomAttributesOutputConfiguration.TDCAttribute(name))) {
+            if (isTDCAttribute(name)) {
                 JSONObject jsonValue = new JSONObject();
                 JSONObject jsonAttributeType = new JSONObject();
 
@@ -133,41 +129,34 @@ public class TTDCCustomAttributesOutput implements Serializable {
                 jsonValue.put("attributeType", jsonAttributeType);
                 jsonValue.put("value", value);
                 jsonValues.put(jsonValue);
-            //}
+            }
 
         }
 
-        jsonSetAttributes.put("id", TDC_ObjectID);
+        jsonSetAttributes.put("id", record.getString(TDCObjectID));
         jsonSetAttributes.put("values", jsonValues);
         jsonSetAttributes.put("comment", "");
 
         message = jsonSetAttributes.toString();
+
+        System.out.println("SetAttributesTDCRestBody:" + message);
 
         return message;
     }
 
     String loginTDCRestCall() throws Exception {
         String auth_path = "/auth/login";
-        URL url = new URL(TDC_Endpoint + auth_path);
+        String urlString = TDCEndpoint + auth_path + "?user=" + TDCUsername + "&password=" + TDCPassword;
+        URL url = new URL(urlString);
         //URL url = new URL("http://localhost:11480/MM/rest/v1/auth/login?user=Administrator&password=Administrator");
 
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
-        con.setDoOutput(true);
 
-        Map<String, String> parameters = new HashMap<>();
-        parameters.put("user", TDC_username);
-        parameters.put("password", TDC_password);
+        int responseCode = con.getResponseCode();
 
-        DataOutputStream out = new DataOutputStream(con.getOutputStream());
-        out.writeBytes(ParameterStringBuilder.getParamsString(parameters));
-        out.flush();
-        out.close();
-
-        int responsecode = con.getResponseCode();
-
-        if (responsecode != 200) {
-            throw new RuntimeException("HttpResponseCode: " + responsecode);
+        if (responseCode != 200) {
+            throw new RuntimeException("HttpResponseCode: " + responseCode);
         } else {
 
             String inline = "";
@@ -187,15 +176,17 @@ public class TTDCCustomAttributesOutput implements Serializable {
             token = jsonObject.getJSONObject("result").getString("token");
         }
 
+        System.out.println("Token: " + token);
+
         return token;
     }
 
     int setAttributesTDCRestCall(Record record) throws Exception{
-        URL url = new URL(TDC_Endpoint + "/repository/setAttributes");
+        URL url = new URL(TDCEndpoint + "/repository/setAttributes");
 
-        // Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 8888));
-        // HttpURLConnection con = (HttpURLConnection) url.openConnection(proxy);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 8888));
+        HttpURLConnection con = (HttpURLConnection) url.openConnection(proxy);
+        //HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
         con.setDoOutput(true);
         //con.setDoInput(true);
@@ -220,6 +211,17 @@ public class TTDCCustomAttributesOutput implements Serializable {
         }
 
         return responsecode;
+    }
+
+    private boolean isTDCAttribute(String name) {
+        boolean isAttribute = false;
+        for (TTDCCustomAttributesOutputConfiguration.TDCAttribute attr : TDCAttributes) {
+            if (attr.name.equals(name)) {
+                isAttribute = true;
+                break;
+            }
+        }
+        return isAttribute;
     }
 
     public static void main(String[] args) {

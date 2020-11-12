@@ -9,8 +9,10 @@ import com.talend.components.dataset.TDCDataset;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.BuiltInSuggestable;
 import org.talend.sdk.component.api.configuration.constraint.Required;
+import org.talend.sdk.component.api.configuration.constraint.Uniques;
 import org.talend.sdk.component.api.configuration.ui.DefaultValue;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
+import org.talend.sdk.component.api.configuration.ui.widget.Structure;
 import org.talend.sdk.component.api.meta.Documentation;
 
 // IMPORTANT: do not change the order o layout TDCObjectID and TDCAttributes. There is a kind of bug that happens otherwise
@@ -30,6 +32,7 @@ public class TTDCCustomAttributesOutputConfiguration implements Serializable {
 
     @Option
     @Required
+    @Uniques
     @Documentation("")
     List<TDCAttribute> TDCAttributes;
 
