@@ -51,8 +51,6 @@ public class TTDCCustomAttributesOutput implements Serializable {
 
     List<TTDCCustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes;
 
-    String token = "";
-
     public TTDCCustomAttributesOutput(@Option("configuration") final TTDCCustomAttributesOutputConfiguration configuration,
                                       final TTDCCustomAttributesService service) {
 
@@ -90,10 +88,11 @@ public class TTDCCustomAttributesOutput implements Serializable {
         // after some custom logic you put here, to send a value to next element you can use an
         // output parameter and call emit(value).
 
+        String token = "";
         try {
             token = TDCRest_login();
-            TDCRest_setAttributes(defaultInput);
-            TDCRest_logout();
+            TDCRest_setAttributes(token, defaultInput);
+            TDCRest_logout(token);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -153,8 +152,9 @@ public class TTDCCustomAttributesOutput implements Serializable {
     }
 
     String TDCRest_login() throws Exception {
+        String token = "";
         String api_path = "/auth/login";
-        String urlString = TDCEndpoint + api_path + "?user=" + TDCUsername + "&password=" + TDCPassword;
+        String urlString = TDCEndpoint + api_path + "?user=" + TDCUsername + "&password=" + TDCPassword + "&forceLogin=true";
         URL url = new URL(urlString);
 
         HttpURLConnection con = getHttpConnection(url);
@@ -168,7 +168,7 @@ public class TTDCCustomAttributesOutput implements Serializable {
         } else {
 
             String inline = "";
-            Scanner scanner = new Scanner(url.openStream());
+            Scanner scanner = new Scanner(con.getInputStream());
 
             //Write all the JSON data into a string using a scanner
             while (scanner.hasNext()) {
@@ -189,28 +189,30 @@ public class TTDCCustomAttributesOutput implements Serializable {
         return token;
     }
 
-    void TDCRest_logout() throws Exception {
+    void TDCRest_logout(String token) throws Exception {
         String api_path = "/auth/logout";
         String urlString = TDCEndpoint + api_path;
         URL url = new URL(urlString);
 
         HttpURLConnection con = getHttpConnection(url);
 
-        con.setDoOutput(true);
+        con.setDoOutput(false);
         con.setRequestMethod("POST");
-        //con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Content-Type", "text/plain");
         con.setRequestProperty("api_key", token);
 
         int responseCode = con.getResponseCode();
+
+        con.disconnect();
 
         if (responseCode != 200) {
             throw new RuntimeException("HttpResponseCode: " + responseCode);
         }
 
-        System.out.println("User " + TDCUsername + " disconnected.");
+        System.out.println("User " + TDCUsername + " with token " + token + " disconnected.");
     }
 
-    int TDCRest_setAttributes(Record record) throws Exception {
+    int TDCRest_setAttributes(String token, Record record) throws Exception {
         String api_path = "/repository/setAttributes";
         URL url = new URL(TDCEndpoint + api_path);
 
@@ -231,9 +233,9 @@ public class TTDCCustomAttributesOutput implements Serializable {
 
         if (responsecode != 200) {
             throw new RuntimeException("HttpResponseCode: " + responsecode);
-        } else {
-            con.disconnect();
         }
+
+        con.disconnect();
 
         return responsecode;
     }
@@ -253,7 +255,7 @@ public class TTDCCustomAttributesOutput implements Serializable {
         HttpURLConnection con;
 
         if (this.isUseProxy) {
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(this.proxyAddress, 8888));
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(this.proxyAddress, this.proxyPort));
             con = (HttpURLConnection) url.openConnection(proxy);
         } else
             con = (HttpURLConnection) url.openConnection();
