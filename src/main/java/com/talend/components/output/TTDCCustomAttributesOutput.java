@@ -13,7 +13,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import com.talend.components.dataset.TDCDataset;
-import com.talend.utilities.ParameterStringBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.talend.sdk.component.api.component.Icon;
@@ -44,6 +43,10 @@ public class TTDCCustomAttributesOutput implements Serializable {
     String TDCUsername;
     String TDCPassword;
 
+    boolean isUseProxy;
+    String proxyAddress;
+    int proxyPort;
+
     String TDCObjectID;
 
     List<TTDCCustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes;
@@ -59,6 +62,9 @@ public class TTDCCustomAttributesOutput implements Serializable {
         this.TDCEndpoint = dataset.getDatastore().getTDC_Endpoint();
         this.TDCUsername = dataset.getDatastore().getTDC_username();
         this.TDCPassword = dataset.getDatastore().getTDC_password();
+        this.isUseProxy = dataset.getDatastore().isUseProxy();
+        this.proxyAddress = dataset.getDatastore().getProxyAddress();
+        this.proxyPort = dataset.getDatastore().getProxyPort();
         this.TDCObjectID = configuration.TDCObjectID;
         this.TDCAttributes = configuration.TDCAttributes;
     }
@@ -85,8 +91,10 @@ public class TTDCCustomAttributesOutput implements Serializable {
         // output parameter and call emit(value).
 
         try {
-            token = loginTDCRestCall();
-            setAttributesTDCRestCall(defaultInput);
+            token = TDCRest_login();
+            TDCRest_setAttributes(defaultInput);
+            TDCRest_logout();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -144,13 +152,13 @@ public class TTDCCustomAttributesOutput implements Serializable {
         return message;
     }
 
-    String loginTDCRestCall() throws Exception {
-        String auth_path = "/auth/login";
-        String urlString = TDCEndpoint + auth_path + "?user=" + TDCUsername + "&password=" + TDCPassword;
+    String TDCRest_login() throws Exception {
+        String api_path = "/auth/login";
+        String urlString = TDCEndpoint + api_path + "?user=" + TDCUsername + "&password=" + TDCPassword;
         URL url = new URL(urlString);
-        //URL url = new URL("http://localhost:11480/MM/rest/v1/auth/login?user=Administrator&password=Administrator");
 
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        HttpURLConnection con = getHttpConnection(url);
+
         con.setRequestMethod("GET");
 
         int responseCode = con.getResponseCode();
@@ -176,25 +184,42 @@ public class TTDCCustomAttributesOutput implements Serializable {
             token = jsonObject.getJSONObject("result").getString("token");
         }
 
-        System.out.println("Token: " + token);
+        System.out.println("User " + TDCUsername + " connected with Token: " + token);
 
         return token;
     }
 
-    int setAttributesTDCRestCall(Record record) throws Exception{
-        URL url = new URL(TDCEndpoint + "/repository/setAttributes");
+    void TDCRest_logout() throws Exception {
+        String api_path = "/auth/logout";
+        String urlString = TDCEndpoint + api_path;
+        URL url = new URL(urlString);
 
-        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 8888));
-        HttpURLConnection con = (HttpURLConnection) url.openConnection(proxy);
-        //HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        HttpURLConnection con = getHttpConnection(url);
 
         con.setDoOutput(true);
-        //con.setDoInput(true);
+        con.setRequestMethod("POST");
+        //con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("api_key", token);
+
+        int responseCode = con.getResponseCode();
+
+        if (responseCode != 200) {
+            throw new RuntimeException("HttpResponseCode: " + responseCode);
+        }
+
+        System.out.println("User " + TDCUsername + " disconnected.");
+    }
+
+    int TDCRest_setAttributes(Record record) throws Exception {
+        String api_path = "/repository/setAttributes";
+        URL url = new URL(TDCEndpoint + api_path);
+
+        HttpURLConnection con = getHttpConnection(url);
+
+        con.setDoOutput(true);
         con.setRequestMethod("PUT");
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("api_key", token);
-
-        System.out.println(con.getRequestProperty("api_key"));
 
         String message = buildSetAttributesTDCRestBody(record);
 
@@ -222,6 +247,18 @@ public class TTDCCustomAttributesOutput implements Serializable {
             }
         }
         return isAttribute;
+    }
+
+    private HttpURLConnection getHttpConnection(URL url) throws Exception{
+        HttpURLConnection con;
+
+        if (this.isUseProxy) {
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(this.proxyAddress, 8888));
+            con = (HttpURLConnection) url.openConnection(proxy);
+        } else
+            con = (HttpURLConnection) url.openConnection();
+
+        return con;
     }
 
     public static void main(String[] args) {

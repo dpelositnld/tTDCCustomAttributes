@@ -4,6 +4,8 @@ import com.talend.components.dataset.TDCDataset;
 import com.talend.components.datastore.TDCDatastore;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.service.Service;
+import org.talend.sdk.component.api.service.asyncvalidation.AsyncValidation;
+import org.talend.sdk.component.api.service.asyncvalidation.ValidationResult;
 import org.talend.sdk.component.api.service.completion.DynamicValues;
 import org.talend.sdk.component.api.service.completion.SuggestionValues;
 import org.talend.sdk.component.api.service.completion.Suggestions;
@@ -11,6 +13,8 @@ import org.talend.sdk.component.api.service.completion.Values;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheck;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 
 @Service
@@ -57,6 +61,17 @@ public class TTDCCustomAttributesService {
         return myCustomService.loadFirstData().getRecord().getSchema();
     }
 */
+    @AsyncValidation("url")
+    public ValidationResult doValidate(@Option("url") String url) {
+        // validate the property
+        try {
+            new URL(url); // important: in a real component don't validate urls this way
+        } catch (MalformedURLException e) {
+            return new ValidationResult(ValidationResult.Status.KO, e.getMessage());
+        }
+        return new ValidationResult(ValidationResult.Status.OK, "Valid URL");
+    }
+
     @HealthCheck
     public HealthCheckStatus testConnection(TDCDatastore datastore) {
 
