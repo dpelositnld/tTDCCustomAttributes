@@ -12,7 +12,7 @@ import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.configuration.ui.widget.Credential;
 import org.talend.sdk.component.api.meta.Documentation;
 
-@DataStore("TDCDatastore")
+@DataStore("TDCBasicAuth")
 @Checkable
 @GridLayout({
         @GridLayout.Row({ "TDC_Endpoint" }),
@@ -22,7 +22,7 @@ import org.talend.sdk.component.api.meta.Documentation;
         @GridLayout.Row({ "proxyAddress", "proxyPort" })
 })
 @Documentation("TODO fill the documentation for this configuration")
-public class TDCDatastore implements Serializable {
+public class TDCBasicAuth implements Serializable {
     @Option
     @Required
     @Validable("url")
@@ -66,17 +66,17 @@ public class TDCDatastore implements Serializable {
         return TDC_password;
     }
 
-    public TDCDatastore setTDC_Endpoint(String TDC_Endpoint) {
+    public TDCBasicAuth setTDC_Endpoint(String TDC_Endpoint) {
         this.TDC_Endpoint = TDC_Endpoint;
         return this;
     }
 
-    public TDCDatastore setTDC_username(String TDC_username) {
+    public TDCBasicAuth setTDC_username(String TDC_username) {
         this.TDC_username = TDC_username;
         return this;
     }
 
-    public TDCDatastore setTDC_password(String TDC_password) {
+    public TDCBasicAuth setTDC_password(String TDC_password) {
         this.TDC_password = TDC_password;
         return this;
     }
