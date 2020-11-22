@@ -1,7 +1,7 @@
 package com.talend.components.service;
 
-import com.talend.components.dataset.TDCDataset;
-import com.talend.components.datastore.TDCDatastore;
+import com.talend.components.dataset.TDCLoginDataset;
+import com.talend.components.datastore.TDCBasicAuthDataStore;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.asyncvalidation.AsyncValidation;
@@ -22,8 +22,7 @@ public class TTDCCustomAttributesService {
 
     // you can put logic here you can reuse in components
     @Suggestions("loadModules")
-    public SuggestionValues loadModules(@Option final TDCDataset dataset) {
-        //dataset.
+    public SuggestionValues loadModules(@Option final TDCLoginDataset dataset) {
         return new SuggestionValues(false,
                 Arrays
                         .asList(new SuggestionValues.Item("1", "Delete"), new SuggestionValues.Item("2", "Insert"),
@@ -73,7 +72,7 @@ public class TTDCCustomAttributesService {
     }
 
     @HealthCheck
-    public HealthCheckStatus testConnection(TDCDatastore datastore) {
+    public HealthCheckStatus testConnection(TDCBasicAuthDataStore datastore) {
 
         if (datastore == null || datastore.getTDC_username().equals("invalidtest")) {
             return new HealthCheckStatus(HealthCheckStatus.Status.KO, "Connection not ok, datastore can't be null");

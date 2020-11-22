@@ -1,25 +1,25 @@
 package com.talend.components.output;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
-import com.talend.components.dataset.TDCDataset;
+import com.talend.components.dataset.TDCLoginDataset;
 
+import lombok.Data;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.BuiltInSuggestable;
 import org.talend.sdk.component.api.configuration.constraint.Required;
 import org.talend.sdk.component.api.configuration.constraint.Uniques;
 import org.talend.sdk.component.api.configuration.ui.DefaultValue;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
-import org.talend.sdk.component.api.configuration.ui.widget.Structure;
 import org.talend.sdk.component.api.meta.Documentation;
 
 // IMPORTANT: do not change the order o layout TDCObjectID and TDCAttributes. There is a kind of bug that happens otherwise
+@Data
 @GridLayout({
     // the generated layout put one configuration entry per line,
     // customize it as much as needed
-        @GridLayout.Row({ "dataset" }),
+        @GridLayout.Row({ "dataSet" }),
         @GridLayout.Row({ "TDCObjectID" }),
         @GridLayout.Row({ "TDCAttributes" })
 
@@ -28,7 +28,7 @@ import org.talend.sdk.component.api.meta.Documentation;
 public class TTDCCustomAttributesOutputConfiguration implements Serializable {
     @Option
     @Documentation("TODO fill the documentation for this parameter")
-    private TDCDataset dataset;
+    private TDCLoginDataset dataSet;
 
     @Option
     @Required
@@ -54,15 +54,12 @@ public class TTDCCustomAttributesOutputConfiguration implements Serializable {
     String TDC_ObjectID2;
     */
 
-    public TDCDataset getDataset() {
-        return dataset;
-    }
-
-    public TTDCCustomAttributesOutputConfiguration setDataset(TDCDataset dataset) {
-        this.dataset = dataset;
+    public TTDCCustomAttributesOutputConfiguration setDataset(TDCLoginDataset dataSet) {
+        this.dataSet = dataSet;
         return this;
     }
 
+    @Data
     @GridLayout({
             @GridLayout.Row({ "name" }),
             @GridLayout.Row({ "comment" })
@@ -78,11 +75,11 @@ public class TTDCCustomAttributesOutputConfiguration implements Serializable {
         @Option
         @BuiltInSuggestable(value = BuiltInSuggestable.Name.INCOMING_SCHEMA_ENTRY_NAMES)
         @Documentation("")
-        public String name;
+        private String name;
 
         @Option
         @DefaultValue("")
         @Documentation("")
-        public String comment;
+        private String comment;
     }
 }

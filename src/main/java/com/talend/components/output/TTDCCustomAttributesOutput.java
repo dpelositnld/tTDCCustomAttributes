@@ -12,7 +12,7 @@ import java.util.*;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import com.talend.components.dataset.TDCDataset;
+import com.talend.components.dataset.TDCLoginDataset;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.talend.sdk.component.api.component.Icon;
@@ -37,12 +37,11 @@ public class TTDCCustomAttributesOutput implements Serializable {
     private final TTDCCustomAttributesOutputConfiguration configuration;
     private final TTDCCustomAttributesService service;
 
-    private TDCDataset dataset;
+    private TDCLoginDataset dataset;
 
     String TDCEndpoint;
     String TDCUsername;
     String TDCPassword;
-
     boolean isUseProxy;
     String proxyAddress;
     int proxyPort;
@@ -56,13 +55,13 @@ public class TTDCCustomAttributesOutput implements Serializable {
 
         this.configuration = configuration;
         this.service = service;
-        this.dataset = configuration.getDataset();
-        this.TDCEndpoint = dataset.getDatastore().getTDC_Endpoint();
-        this.TDCUsername = dataset.getDatastore().getTDC_username();
-        this.TDCPassword = dataset.getDatastore().getTDC_password();
-        this.isUseProxy = dataset.getDatastore().isUseProxy();
-        this.proxyAddress = dataset.getDatastore().getProxyAddress();
-        this.proxyPort = dataset.getDatastore().getProxyPort();
+        this.dataset = configuration.getDataSet();
+        this.TDCEndpoint = dataset.getDataStore().getTDC_Endpoint();
+        this.TDCUsername = dataset.getDataStore().getTDC_username();
+        this.TDCPassword = dataset.getDataStore().getTDC_password();
+        this.isUseProxy = dataset.getDataStore().isUseProxy();
+        this.proxyAddress = dataset.getDataStore().getProxyAddress();
+        this.proxyPort = dataset.getDataStore().getProxyPort();
         this.TDCObjectID = configuration.TDCObjectID;
         this.TDCAttributes = configuration.TDCAttributes;
     }
@@ -243,7 +242,7 @@ public class TTDCCustomAttributesOutput implements Serializable {
     private boolean isTDCAttribute(String name) {
         boolean isAttribute = false;
         for (TTDCCustomAttributesOutputConfiguration.TDCAttribute attr : TDCAttributes) {
-            if (attr.name.equals(name)) {
+            if (attr.getName().equals(name)) {
                 isAttribute = true;
                 break;
             }
