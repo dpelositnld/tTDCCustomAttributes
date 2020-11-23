@@ -1,0 +1,31 @@
+package com.talend.components.TDC.configuration;
+
+import com.talend.components.TDC.dataset.LoginDataset;
+import lombok.Data;
+import org.talend.sdk.component.api.configuration.Option;
+import org.talend.sdk.component.api.configuration.constraint.Required;
+import org.talend.sdk.component.api.configuration.type.DataSet;
+import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
+import org.talend.sdk.component.api.meta.Documentation;
+
+import java.io.Serializable;
+
+@Data
+@GridLayout({
+        // the generated layout put one configuration entry per line,
+        // customize it as much as needed
+        @GridLayout.Row({ "dataSet" }),
+        @GridLayout.Row({ "token" })
+})
+@Documentation("TODO fill the documentation for this configuration")
+public class LogoutMapperConfiguration implements Serializable {
+
+    @Option
+    @Documentation("TODO fill the documentation for this parameter")
+    private LoginDataset dataSet;
+
+    @Option
+    @Required
+    @Documentation("TODO fill the documentation for this parameter")
+    private String token;
+}

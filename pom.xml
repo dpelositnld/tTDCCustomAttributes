@@ -7,11 +7,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.talend</groupId>
-  <artifactId>tTDCCustomAttributes</artifactId>
+  <artifactId>TDCComponents</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>A Component Family</name>
+  <name>TDCComponents</name>
   <description>A generated component project</description>
 
   <properties>
@@ -35,10 +35,11 @@
   </properties>
 
   <dependencies>
+    <!-- https://mvnrepository.com/artifact/org.talend.sdk.component/component-api -->
     <dependency>
       <groupId>org.talend.sdk.component</groupId>
       <artifactId>component-api</artifactId>
-      <version>1.1.25</version>
+      <version>1.1.26</version>
       <scope>provided</scope>
     </dependency>
 
@@ -63,7 +64,7 @@
       <extension>
         <groupId>org.talend.sdk.component</groupId>
         <artifactId>talend-component-maven-plugin</artifactId>
-        <version>1.1.25</version>
+        <version>1.1.26</version>
       </extension>
     </extensions>
 
@@ -83,6 +84,7 @@
           </compilerArgs>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -96,8 +98,15 @@
       <plugin>
         <groupId>org.talend.sdk.component</groupId>
         <artifactId>talend-component-maven-plugin</artifactId>
-        <version>1.1.25</version>
+        <version>1.1.26</version>
         <executions>
+          <execution>
+            <id>talend-svg2png</id>
+            <goals>
+              <goal>svg2png</goal>
+            </goals>
+          </execution>
+
           <execution>
             <id>talend-component-validate</id>
             <phase>process-classes</phase>
@@ -105,12 +114,22 @@
               <goal>validate</goal>
             </goals>
             <configuration>
-              <validateDataSet>false</validateDataSet>
+              <validateDataSet>true</validateDataSet>
+              <validateModel>true</validateModel>
+              <validateSerializable>true</validateSerializable>
+              <validateMetadata>true</validateMetadata>
+              <validateDataStore>true</validateDataStore>
+              <validateDataSet>true</validateDataSet>
+              <validateComponent>true</validateComponent>
+              <validateActions>true</validateActions>
+              <validateFamily>true</validateFamily>
+              <validateLayout>true</validateLayout>
+              <validatePlaceholder>false</validatePlaceholder>
             </configuration>
           </execution>
+
         </executions>
       </plugin>
-
     </plugins>
   </build>
 </project>
