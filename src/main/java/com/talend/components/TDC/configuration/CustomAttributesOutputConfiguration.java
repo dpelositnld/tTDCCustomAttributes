@@ -18,28 +18,25 @@ import org.talend.sdk.component.api.meta.Documentation;
 // IMPORTANT: do not change the order o layout TDCObjectID and TDCAttributes. There is a kind of bug that happens otherwise
 @Data
 @GridLayout({
-    // the generated layout put one configuration entry per line,
-    // customize it as much as needed
         @GridLayout.Row({ "dataSet" }),
-        @GridLayout.Row({ "isUseToken" }),
+        @GridLayout.Row({ "isUseExistingSession" }),
         @GridLayout.Row({ "token" }),
         @GridLayout.Row({ "TDCObjectID" }),
         @GridLayout.Row({ "TDCAttributes" })
-
 })
 @Documentation("TODO fill the documentation for this configuration")
 public class CustomAttributesOutputConfiguration implements Serializable {
     @Option
-    @ActiveIf(target = "isUseToken", value = "false")
+    @ActiveIf(target = "isUseExistingSession", value = "false")
     @Documentation("TODO fill the documentation for this parameter")
     private LoginDataset dataSet;
 
     @Option
     @Documentation("TODO fill the documentation for this parameter")
-    private boolean isUseToken;
+    private boolean isUseExistingSession = false;
 
     @Option
-    @ActiveIf(target = "isUseToken", value = "true")
+    @ActiveIf(target = "isUseExistingSession", value = "true")
     @Documentation("TODO fill the documentation for this parameter")
     private String token;
 

@@ -57,9 +57,9 @@ public class CustomAttributesOutput implements Serializable {
         this.configuration = configuration;
         this.service = service;
         this.dataset = configuration.getDataSet();
-        this.TDCEndpoint = dataset.getDataStore().getTDC_Endpoint();
-        this.TDCUsername = dataset.getDataStore().getTDC_username();
-        this.TDCPassword = dataset.getDataStore().getTDC_password();
+        this.TDCEndpoint = dataset.getDataStore().getEndpoint();
+        this.TDCUsername = dataset.getDataStore().getUsername();
+        this.TDCPassword = dataset.getDataStore().getPassword();
         this.isUseProxy = dataset.getDataStore().isUseProxy();
         this.proxyAddress = dataset.getDataStore().getProxyAddress();
         this.proxyPort = dataset.getDataStore().getProxyPort();
@@ -90,13 +90,16 @@ public class CustomAttributesOutput implements Serializable {
 
         String token = "";
         try {
-            if (configuration.isUseToken())
+            if (configuration.isUseExistingSession())
                 token = configuration.getToken();
             else
                 token = TDCRest_login();
-            TDCRest_setAttributes(token, defaultInput);
-            TDCRest_logout(token);
 
+            TDCRest_setAttributes(token, defaultInput);
+
+            // logout only if not sharing a session
+            if (!configuration.isUseExistingSession())
+                TDCRest_logout(token);
         } catch (Exception e) {
             e.printStackTrace();
         }

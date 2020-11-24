@@ -9,6 +9,7 @@ import org.talend.sdk.component.api.configuration.action.Validable;
 import org.talend.sdk.component.api.configuration.condition.ActiveIf;
 import org.talend.sdk.component.api.configuration.constraint.Required;
 import org.talend.sdk.component.api.configuration.type.DataStore;
+import org.talend.sdk.component.api.configuration.ui.DefaultValue;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.configuration.ui.widget.Credential;
 import org.talend.sdk.component.api.meta.Documentation;
@@ -17,9 +18,9 @@ import org.talend.sdk.component.api.meta.Documentation;
 @DataStore("BasicAuthDataStore")
 @Checkable
 @GridLayout({
-        @GridLayout.Row({ "TDC_Endpoint" }),
-        @GridLayout.Row({ "TDC_username" }),
-        @GridLayout.Row({ "TDC_password" }),
+        @GridLayout.Row({ "endpoint" }),
+        @GridLayout.Row({ "username" }),
+        @GridLayout.Row({ "password" }),
         @GridLayout.Row({ "isUseProxy" }),
         @GridLayout.Row({ "proxyAddress", "proxyPort" })
 })
@@ -29,16 +30,16 @@ public class BasicAuthDataStore implements Serializable {
     @Required
     @Validable("url")
     @Documentation("TODO fill the documentation for this parameter")
-    private String TDC_Endpoint;
+    private String endpoint;
 
     @Option
     @Documentation("TODO fill the documentation for this parameter")
-    private String TDC_username;
+    private String username;
 
     @Option
     @Credential
     @Documentation("TODO fill the documentation for this parameter")
-    private String TDC_password;
+    private String password;
 
     @Option
     @Documentation("TODO fill the documentation for this parameter")

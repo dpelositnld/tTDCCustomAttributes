@@ -40,7 +40,7 @@ public class LoginMapper implements Serializable {
 
     @PostConstruct
     public void init() {
-        loginClient.base(configuration.getDataSet().getDataStore().getTDC_Endpoint());
+        loginClient.base(configuration.getDataSet().getDataStore().getEndpoint());
     }
 
     @Assessor

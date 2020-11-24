@@ -21,7 +21,7 @@ public class LoginService {
     @HealthCheck
     public HealthCheckStatus testConnection(BasicAuthDataStore dataStore) {
 
-        if (dataStore == null || dataStore.getTDC_username().equals("invalidtest")) {
+        if (dataStore == null || dataStore.getUsername().equals("invalidtest")) {
             return new HealthCheckStatus(HealthCheckStatus.Status.KO, "Connection not ok, datastore can't be null");
         }
         return new HealthCheckStatus(HealthCheckStatus.Status.OK, "Connection ok");

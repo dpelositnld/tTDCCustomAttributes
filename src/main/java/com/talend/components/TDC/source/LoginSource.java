@@ -34,7 +34,7 @@ public class LoginSource implements Serializable {
         schemaBuilder.withEntry(recordBuilderFactory.newEntryBuilder().withName("token").withType(Schema.Type.STRING).withNullable(false).build());
         schemaBuilder.build();
 
-        result = login(configuration.getDataSet().getDataStore().getTDC_username(), configuration.getDataSet().getDataStore().getTDC_password());
+        result = login(configuration.getDataSet().getDataStore().getUsername(), configuration.getDataSet().getDataStore().getPassword());
         //token = result.getJsonObject("result").getString("token");
         //System.out.println(token);
     }

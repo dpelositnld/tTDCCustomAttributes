@@ -39,9 +39,10 @@ public class LogoutMapper implements Serializable {
         this.logoutClient = logoutClient;
     }
 
+
     @PostConstruct
     public void init() {
-        logoutClient.base(configuration.getDataSet().getDataStore().getTDC_Endpoint());
+        logoutClient.base(configuration.getDataSet().getDataStore().getEndpoint());
     }
 
     @Assessor
