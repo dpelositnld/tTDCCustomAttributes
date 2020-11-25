@@ -1,5 +1,6 @@
 package com.talend.components.TDC.client;
 
+import org.json.JSONObject;
 import org.talend.sdk.component.api.service.http.*;
 
 import javax.json.JsonObject;
@@ -15,6 +16,13 @@ public interface TDCAPIClient extends HttpClient {
     Response<JsonObject> logout(
             @Header("Content-Type") String contentType,
             @Header("api_key") String token
+    );
+
+    @Request(path = "/repository/setAttributes", method = "PUT")
+    Response<JsonObject> setAttributes(
+            @Header("Content-Type") String contentType,
+            @Header("api_key") String token,
+            JSONObject payload
     );
 
 

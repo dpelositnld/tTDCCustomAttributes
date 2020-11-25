@@ -48,7 +48,8 @@ public class LoginService {
         throw new RuntimeException(response.error(String.class));
     }
 
-    public String getToken(JsonObject response) {
+    public String getToken(String username, String password) {
+        JsonObject response = login(username, password);
         return response.getJsonObject("result").getString("token");
     }
 }

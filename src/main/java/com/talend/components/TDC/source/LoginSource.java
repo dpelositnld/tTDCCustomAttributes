@@ -23,6 +23,8 @@ public class LoginSource implements Serializable {
     private JsonObject result;
     private boolean isTokenEmitted = false;
 
+    private String token;
+
     public LoginSource(LoginMapperConfiguration configuration, RecordBuilderFactory recordBuilderFactory, LoginService service) {
         this.configuration = configuration;
         this.recordBuilderFactory = recordBuilderFactory;
@@ -35,12 +37,11 @@ public class LoginSource implements Serializable {
         schemaBuilder.withEntry(recordBuilderFactory.newEntryBuilder().withName("token").withType(Schema.Type.STRING).withNullable(false).build());
         schemaBuilder.build();
 
-        result = service.login(configuration.getDataSet().getDataStore().getUsername(), configuration.getDataSet().getDataStore().getPassword());
+        token = service.getToken(configuration.getDataSet().getDataStore().getUsername(), configuration.getDataSet().getDataStore().getPassword());
     }
 
     @Producer
     public Record produces() {
-        String token = service.getToken(result);
         Record record = null;
         if (!isTokenEmitted) {
             record = recordBuilderFactory.newRecordBuilder()

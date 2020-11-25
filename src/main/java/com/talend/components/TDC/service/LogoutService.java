@@ -28,7 +28,7 @@ public class LogoutService {
     }
 
     public JsonObject logout(String token) {
-        final Response<JsonObject> response = client.logout("text/plain", token);
+        final Response<JsonObject> response = client.logout("application/json", token);
         if (response.status() == 200) {
             return response.body();
         }

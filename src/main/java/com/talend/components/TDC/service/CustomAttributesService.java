@@ -1,8 +1,15 @@
 package com.talend.components.TDC.service;
 
+import com.talend.components.TDC.client.TDCAPIClient;
+import com.talend.components.TDC.configuration.CustomAttributesOutputConfiguration;
 import com.talend.components.TDC.dataset.LoginDataset;
 import com.talend.components.TDC.datastore.BasicAuthDataStore;
+import lombok.Data;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.talend.sdk.component.api.configuration.Option;
+import org.talend.sdk.component.api.record.Record;
+import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.asyncvalidation.AsyncValidation;
 import org.talend.sdk.component.api.service.asyncvalidation.ValidationResult;
@@ -10,15 +17,26 @@ import org.talend.sdk.component.api.service.completion.DynamicValues;
 import org.talend.sdk.component.api.service.completion.SuggestionValues;
 import org.talend.sdk.component.api.service.completion.Suggestions;
 import org.talend.sdk.component.api.service.completion.Values;
-import org.talend.sdk.component.api.service.healthcheck.HealthCheck;
-import org.talend.sdk.component.api.service.healthcheck.HealthCheckStatus;
+import org.talend.sdk.component.api.service.http.Response;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 
+@Data
 @Service
 public class CustomAttributesService {
+    @Service
+    TDCAPIClient client;
+
+    @Service
+    LoginService loginService;
+
+    @Service
+    LogoutService logoutService;
 
     // you can put logic here you can reuse in components
     @Suggestions("loadModules")
@@ -69,5 +87,77 @@ public class CustomAttributesService {
             return new ValidationResult(ValidationResult.Status.KO, e.getMessage());
         }
         return new ValidationResult(ValidationResult.Status.OK, "Valid URL");
+    }
+
+    public JsonObject setAttributes(
+        boolean isUseExistingSession,
+        String username,
+        String password,
+        String token,
+        Record record,
+        String TDCObjectID,
+        List<CustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes){
+        JsonObject responseBody;
+
+        if (!isUseExistingSession)
+            token = loginService.getToken(username, password);
+
+        JSONObject payload = buildSetAttributesTDCRestBody(record, TDCObjectID, TDCAttributes);
+
+        final Response<JsonObject> response = client.setAttributes("application/json", token, payload);
+        if (response.status() == 200) {
+            responseBody = response.body();
+        } else
+            throw new RuntimeException(response.error(String.class));
+
+        if (isUseExistingSession)
+            logoutService.logout(token);
+
+        return responseBody;
+    }
+
+    private JSONObject buildSetAttributesTDCRestBody(Record record, String TDCObjectID, List<CustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes) {
+        String message;
+        JSONObject jsonSetAttributes = new JSONObject();
+
+        JSONArray jsonValues = new JSONArray();
+
+        Schema schema = record.getSchema();
+        List<Schema.Entry> entries = schema.getEntries();
+
+        for (Schema.Entry entry: entries) {
+            String name = entry.getName();
+            String value = record.getString(name);
+
+            if (isTDCAttribute(name, TDCAttributes)) {
+                JSONObject jsonValue = new JSONObject();
+                JSONObject jsonAttributeType = new JSONObject();
+
+                jsonAttributeType.put("type", "CUSTOM_ATTRIBUTE");
+                jsonAttributeType.put("name", name);
+
+                jsonValue.put("attributeType", jsonAttributeType);
+                jsonValue.put("value", value);
+                jsonValues.put(jsonValue);
+            }
+
+        }
+
+        jsonSetAttributes.put("id", record.getString(TDCObjectID));
+        jsonSetAttributes.put("values", jsonValues);
+        jsonSetAttributes.put("comment", "");
+
+        return jsonSetAttributes;
+    }
+
+    private boolean isTDCAttribute(String name, List<CustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes) {
+        boolean isAttribute = false;
+        for (CustomAttributesOutputConfiguration.TDCAttribute attr : TDCAttributes) {
+            if (attr.getName().equals(name)) {
+                isAttribute = true;
+                break;
+            }
+        }
+        return isAttribute;
     }
 }

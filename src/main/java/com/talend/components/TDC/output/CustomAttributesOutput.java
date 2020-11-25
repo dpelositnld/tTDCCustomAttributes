@@ -14,6 +14,8 @@ import javax.json.JsonObject;
 import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.CustomAttributesOutputConfiguration;
 import com.talend.components.TDC.dataset.LoginDataset;
+import com.talend.components.TDC.service.LoginService;
+import com.talend.components.TDC.service.LogoutService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.talend.sdk.component.api.component.Icon;
@@ -38,37 +40,23 @@ import org.talend.sdk.component.api.service.http.Response;
 public class CustomAttributesOutput implements Serializable {
     private final CustomAttributesOutputConfiguration configuration;
     private final CustomAttributesService service;
-    private final TDCAPIClient TDCAPIClient;
 
     private LoginDataset dataset;
-
-    String TDCEndpoint;
-    String TDCUsername;
-    String TDCPassword;
-
-    String TDCObjectID;
 
     List<CustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes;
 
     public CustomAttributesOutput(@Option("configuration")
                                   final CustomAttributesOutputConfiguration configuration,
-                                  final CustomAttributesService service,
-                                  final TDCAPIClient TDCAPIClient) {
+                                  final CustomAttributesService service) {
 
         this.configuration = configuration;
         this.service = service;
-        this.TDCAPIClient = TDCAPIClient;
         this.dataset = configuration.getDataSet();
-        this.TDCEndpoint = dataset.getDataStore().getEndpoint();
-        this.TDCUsername = dataset.getDataStore().getUsername();
-        this.TDCPassword = dataset.getDataStore().getPassword();
-        this.TDCObjectID = configuration.getTDCObjectID();
-        this.TDCAttributes = configuration.getTDCAttributes();
     }
 
     @PostConstruct
     public void init() {
-        TDCAPIClient.base(configuration.getDataSet().getDataStore().getEndpoint());
+        service.getClient().base(configuration.getDataSet().getDataStore().getEndpoint());
     }
 
     @BeforeGroup
@@ -81,26 +69,15 @@ public class CustomAttributesOutput implements Serializable {
     @ElementListener
     public void onNext(
             @Input final Record defaultInput) {
-        // this is the method allowing you to handle the input(s) and emit the output(s)
-        // after some custom logic you put here, to send a value to next element you can use an
-        // output parameter and call emit(value).
-
-        String token = "";
-        try {
-            if (configuration.isUseExistingSession())
-                token = configuration.getToken();
-            else
-                token = TDCRest_login();
-
-            TDCRest_setAttributes(token, defaultInput);
-
-            // logout only if not sharing a session
-            if (!configuration.isUseExistingSession())
-                TDCRest_logout(token);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        service.setAttributes(
+                configuration.isUseExistingSession(),
+                configuration.getDataSet().getDataStore().getUsername(),
+                configuration.getDataSet().getDataStore().getPassword(),
+                configuration.getToken(),
+                defaultInput,
+                configuration.getTDCObjectID(),
+                configuration.getTDCAttributes()
+                );
     }
 
     @AfterGroup
@@ -115,122 +92,4 @@ public class CustomAttributesOutput implements Serializable {
         // release potential connections you created or data you cached
         // Note: if you don't need it you can delete it
     }
-
-    String buildSetAttributesTDCRestBody(Record record) {
-        String message;
-        JSONObject jsonSetAttributes = new JSONObject();
-
-        JSONArray jsonValues = new JSONArray();
-
-        Schema schema = record.getSchema();
-        List<Schema.Entry> entries = schema.getEntries();
-
-        for (Schema.Entry entry: entries) {
-            String name = entry.getName();
-            String value = record.getString(name);
-
-            if (isTDCAttribute(name)) {
-                JSONObject jsonValue = new JSONObject();
-                JSONObject jsonAttributeType = new JSONObject();
-
-                jsonAttributeType.put("type", "CUSTOM_ATTRIBUTE");
-                jsonAttributeType.put("name", name);
-
-                jsonValue.put("attributeType", jsonAttributeType);
-                jsonValue.put("value", value);
-                jsonValues.put(jsonValue);
-            }
-
-        }
-
-        jsonSetAttributes.put("id", record.getString(TDCObjectID));
-        jsonSetAttributes.put("values", jsonValues);
-        jsonSetAttributes.put("comment", "");
-
-        message = jsonSetAttributes.toString();
-
-        System.out.println("SetAttributesTDCRestBody:" + message);
-
-        return message;
-    }
-
-    String TDCRest_login() throws Exception {
-        Response<JsonObject> response = TDCAPIClient.login(
-                configuration.getDataSet().getDataStore().getUsername(),
-                configuration.getDataSet().getDataStore().getPassword(),
-                true);
-
-        String token = response.body().getJsonObject("result").getString("token");
-
-        System.out.println("User " + TDCUsername + " connected with Token: " + token);
-
-        return token;
-    }
-
-    void TDCRest_logout(String token) throws Exception {
-        String api_path = "/auth/logout";
-        String urlString = TDCEndpoint + api_path;
-        URL url = new URL(urlString);
-
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-        con.setDoOutput(false);
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "text/plain");
-        con.setRequestProperty("api_key", token);
-
-        int responseCode = con.getResponseCode();
-
-        con.disconnect();
-
-        if (responseCode != 200) {
-            throw new RuntimeException("HttpResponseCode: " + responseCode);
-        }
-
-        System.out.println("User " + TDCUsername + " with token " + token + " disconnected.");
-    }
-
-    int TDCRest_setAttributes(String token, Record record) throws Exception {
-        String api_path = "/repository/setAttributes";
-        URL url = new URL(TDCEndpoint + api_path);
-
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-        con.setDoOutput(true);
-        con.setRequestMethod("PUT");
-        con.setRequestProperty("Content-Type", "application/json");
-        con.setRequestProperty("api_key", token);
-
-        String message = buildSetAttributesTDCRestBody(record);
-
-        OutputStreamWriter wr = new OutputStreamWriter(con.getOutputStream());
-        wr.write(message);
-        wr.flush();
-
-        int responsecode = con.getResponseCode();
-
-        if (responsecode != 200) {
-            throw new RuntimeException("HttpResponseCode: " + responsecode);
-        }
-
-        con.disconnect();
-
-        return responsecode;
-    }
-
-    private boolean isTDCAttribute(String name) {
-        boolean isAttribute = false;
-        for (CustomAttributesOutputConfiguration.TDCAttribute attr : TDCAttributes) {
-            if (attr.getName().equals(name)) {
-                isAttribute = true;
-                break;
-            }
-        }
-        return isAttribute;
-    }
-
-    public static void main(String[] args) {
-        // new CustomAttributesOutput(new CustomAttributesOutputConfiguration(), new CustomAttributesService()).onNext(r);
-    }
-
 }
