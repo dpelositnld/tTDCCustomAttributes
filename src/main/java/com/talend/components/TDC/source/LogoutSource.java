@@ -1,7 +1,9 @@
 package com.talend.components.TDC.source;
 
+import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.LogoutMapperConfiguration;
-import com.talend.components.TDC.client.LogoutClient;
+import com.talend.components.TDC.service.LoginService;
+import com.talend.components.TDC.service.LogoutService;
 import org.talend.sdk.component.api.input.Producer;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.record.Schema;
@@ -14,17 +16,17 @@ import java.io.Serializable;
 
 public class LogoutSource  implements Serializable {
     private final LogoutMapperConfiguration configuration;
-    private final LogoutClient logoutClient;
+    private final LogoutService service;
 
     private final RecordBuilderFactory recordBuilderFactory;
 
     private JsonObject response;
     private boolean recordConsumed = false;
 
-    public LogoutSource(LogoutMapperConfiguration configuration, RecordBuilderFactory recordBuilderFactory, LogoutClient logoutClient) {
+    public LogoutSource(LogoutMapperConfiguration configuration, RecordBuilderFactory recordBuilderFactory, LogoutService service) {
         this.configuration = configuration;
         this.recordBuilderFactory = recordBuilderFactory;
-        this.logoutClient = logoutClient;
+        this.service = service;
     }
 
     @PostConstruct
@@ -36,7 +38,7 @@ public class LogoutSource  implements Serializable {
                 ;
         schemaBuilder.build();
 
-        response = logout(configuration.getToken());
+        response = service.logout(configuration.getToken());
     }
 
     @Producer
@@ -67,14 +69,5 @@ public class LogoutSource  implements Serializable {
             recordConsumed = true;
         }
         return record;
-    }
-
-    private JsonObject logout(String token) {
-        final Response<JsonObject> response = logoutClient.logout("text/plain", token);
-        if (response.status() == 200) {
-            return response.body();
-        }
-
-        throw new RuntimeException(response.error(String.class));
     }
 }

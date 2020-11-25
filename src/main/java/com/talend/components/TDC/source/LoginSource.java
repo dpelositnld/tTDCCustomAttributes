@@ -1,7 +1,8 @@
 package com.talend.components.TDC.source;
 
+import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.LoginMapperConfiguration;
-import com.talend.components.TDC.client.LoginClient;
+import com.talend.components.TDC.service.LoginService;
 import org.talend.sdk.component.api.input.Producer;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.record.Schema;
@@ -15,17 +16,17 @@ import java.io.Serializable;
 
 public class LoginSource implements Serializable {
     private final LoginMapperConfiguration configuration;
-    private final LoginClient loginClient;
+    private final LoginService service;
 
     private final RecordBuilderFactory recordBuilderFactory;
 
     private JsonObject result;
     private boolean isTokenEmitted = false;
 
-    public LoginSource(LoginMapperConfiguration configuration, RecordBuilderFactory recordBuilderFactory, LoginClient loginClient) {
+    public LoginSource(LoginMapperConfiguration configuration, RecordBuilderFactory recordBuilderFactory, LoginService service) {
         this.configuration = configuration;
         this.recordBuilderFactory = recordBuilderFactory;
-        this.loginClient = loginClient;
+        this.service = service;
     }
 
     @PostConstruct
@@ -34,15 +35,12 @@ public class LoginSource implements Serializable {
         schemaBuilder.withEntry(recordBuilderFactory.newEntryBuilder().withName("token").withType(Schema.Type.STRING).withNullable(false).build());
         schemaBuilder.build();
 
-        result = login(configuration.getDataSet().getDataStore().getUsername(), configuration.getDataSet().getDataStore().getPassword());
-        //token = result.getJsonObject("result").getString("token");
-        //System.out.println(token);
+        result = service.login(configuration.getDataSet().getDataStore().getUsername(), configuration.getDataSet().getDataStore().getPassword());
     }
 
     @Producer
     public Record produces() {
-        //JsonObject output = isTokenEmitted? null: result;
-        String token = result.getJsonObject("result").getString("token");
+        String token = service.getToken(result);
         Record record = null;
         if (!isTokenEmitted) {
             record = recordBuilderFactory.newRecordBuilder()
@@ -54,13 +52,6 @@ public class LoginSource implements Serializable {
         return record;
     }
 
-    private JsonObject login(String username, String password) {
-        final Response<JsonObject> response = loginClient.login(username, password, true);
-        if (response.status() == 200) {
-            return response.body();
-        }
 
-        throw new RuntimeException(response.error(String.class));
-    }
 
 }

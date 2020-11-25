@@ -4,14 +4,14 @@ import static org.talend.sdk.component.api.component.Icon.IconType.CUSTOM;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.json.JsonObject;
 
+import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.CustomAttributesOutputConfiguration;
 import com.talend.components.TDC.dataset.LoginDataset;
 import org.json.JSONArray;
@@ -29,6 +29,7 @@ import org.talend.sdk.component.api.record.Record;
 
 import com.talend.components.TDC.service.CustomAttributesService;
 import org.talend.sdk.component.api.record.Schema;
+import org.talend.sdk.component.api.service.http.Response;
 
 @Version(1) // default version is 1, if some configuration changes happen between 2 versions you can add a migrationHandler
 @Icon(value = CUSTOM, custom = "CustomAttributesOutput") // icon is located at src/main/resources/icons/CustomAttributesOutput.svg
@@ -37,41 +38,37 @@ import org.talend.sdk.component.api.record.Schema;
 public class CustomAttributesOutput implements Serializable {
     private final CustomAttributesOutputConfiguration configuration;
     private final CustomAttributesService service;
+    private final TDCAPIClient TDCAPIClient;
 
     private LoginDataset dataset;
 
     String TDCEndpoint;
     String TDCUsername;
     String TDCPassword;
-    boolean isUseProxy;
-    String proxyAddress;
-    int proxyPort;
 
     String TDCObjectID;
 
     List<CustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes;
 
-    public CustomAttributesOutput(@Option("configuration") final CustomAttributesOutputConfiguration configuration,
-                                  final CustomAttributesService service) {
+    public CustomAttributesOutput(@Option("configuration")
+                                  final CustomAttributesOutputConfiguration configuration,
+                                  final CustomAttributesService service,
+                                  final TDCAPIClient TDCAPIClient) {
 
         this.configuration = configuration;
         this.service = service;
+        this.TDCAPIClient = TDCAPIClient;
         this.dataset = configuration.getDataSet();
         this.TDCEndpoint = dataset.getDataStore().getEndpoint();
         this.TDCUsername = dataset.getDataStore().getUsername();
         this.TDCPassword = dataset.getDataStore().getPassword();
-        this.isUseProxy = dataset.getDataStore().isUseProxy();
-        this.proxyAddress = dataset.getDataStore().getProxyAddress();
-        this.proxyPort = dataset.getDataStore().getProxyPort();
         this.TDCObjectID = configuration.getTDCObjectID();
         this.TDCAttributes = configuration.getTDCAttributes();
     }
 
     @PostConstruct
     public void init() {
-        // this method will be executed once for the whole component execution,
-        // this is where you can establish a connection for instance
-        // Note: if you don't need it you can delete it
+        TDCAPIClient.base(configuration.getDataSet().getDataStore().getEndpoint());
     }
 
     @BeforeGroup
@@ -158,37 +155,12 @@ public class CustomAttributesOutput implements Serializable {
     }
 
     String TDCRest_login() throws Exception {
-        String token = "";
-        String api_path = "/auth/login";
-        String urlString = TDCEndpoint + api_path + "?user=" + TDCUsername + "&password=" + TDCPassword + "&forceLogin=true";
-        URL url = new URL(urlString);
+        Response<JsonObject> response = TDCAPIClient.login(
+                configuration.getDataSet().getDataStore().getUsername(),
+                configuration.getDataSet().getDataStore().getPassword(),
+                true);
 
-        HttpURLConnection con = getHttpConnection(url);
-
-        con.setRequestMethod("GET");
-
-        int responseCode = con.getResponseCode();
-
-        if (responseCode != 200) {
-            throw new RuntimeException("HttpResponseCode: " + responseCode);
-        } else {
-
-            String inline = "";
-            Scanner scanner = new Scanner(con.getInputStream());
-
-            //Write all the JSON data into a string using a scanner
-            while (scanner.hasNext()) {
-                inline += scanner.nextLine();
-            }
-
-            //Close the scanner
-            scanner.close();
-            con.disconnect();
-
-            JSONObject jsonObject = new JSONObject(inline);
-
-            token = jsonObject.getJSONObject("result").getString("token");
-        }
+        String token = response.body().getJsonObject("result").getString("token");
 
         System.out.println("User " + TDCUsername + " connected with Token: " + token);
 
@@ -200,7 +172,7 @@ public class CustomAttributesOutput implements Serializable {
         String urlString = TDCEndpoint + api_path;
         URL url = new URL(urlString);
 
-        HttpURLConnection con = getHttpConnection(url);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
         con.setDoOutput(false);
         con.setRequestMethod("POST");
@@ -222,7 +194,7 @@ public class CustomAttributesOutput implements Serializable {
         String api_path = "/repository/setAttributes";
         URL url = new URL(TDCEndpoint + api_path);
 
-        HttpURLConnection con = getHttpConnection(url);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
         con.setDoOutput(true);
         con.setRequestMethod("PUT");
@@ -255,18 +227,6 @@ public class CustomAttributesOutput implements Serializable {
             }
         }
         return isAttribute;
-    }
-
-    private HttpURLConnection getHttpConnection(URL url) throws Exception{
-        HttpURLConnection con;
-
-        if (this.isUseProxy) {
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(this.proxyAddress, this.proxyPort));
-            con = (HttpURLConnection) url.openConnection(proxy);
-        } else
-            con = (HttpURLConnection) url.openConnection();
-
-        return con;
     }
 
     public static void main(String[] args) {

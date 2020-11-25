@@ -1,6 +1,6 @@
 package com.talend.components.TDC.input;
 
-import com.talend.components.TDC.client.LogoutClient;
+import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.LogoutMapperConfiguration;
 import com.talend.components.TDC.service.LogoutService;
 import com.talend.components.TDC.source.LogoutSource;
@@ -27,22 +27,19 @@ public class LogoutMapper implements Serializable {
     private final LogoutMapperConfiguration configuration;
     private final LogoutService service;
     private final RecordBuilderFactory recordBuilderFactory;
-    private final LogoutClient logoutClient;
 
     public LogoutMapper(@Option("configuration") final LogoutMapperConfiguration configuration,
                         final RecordBuilderFactory recordBuilderFactory,
-                        final LogoutService service,
-                        final LogoutClient logoutClient) {
+                        final LogoutService service) {
         this.configuration = configuration;
         this.recordBuilderFactory = recordBuilderFactory;
         this.service = service;
-        this.logoutClient = logoutClient;
     }
 
 
     @PostConstruct
     public void init() {
-        logoutClient.base(configuration.getDataSet().getDataStore().getEndpoint());
+        service.getClient().base(configuration.getDataSet().getDataStore().getEndpoint());
     }
 
     @Assessor
@@ -57,6 +54,6 @@ public class LogoutMapper implements Serializable {
 
     @Emitter
     public LogoutSource create() {
-        return new LogoutSource(configuration, recordBuilderFactory, logoutClient);
+        return new LogoutSource(configuration, recordBuilderFactory, service);
     }
 }

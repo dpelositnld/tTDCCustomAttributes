@@ -20,9 +20,7 @@ import org.talend.sdk.component.api.meta.Documentation;
 @GridLayout({
         @GridLayout.Row({ "endpoint" }),
         @GridLayout.Row({ "username" }),
-        @GridLayout.Row({ "password" }),
-        @GridLayout.Row({ "isUseProxy" }),
-        @GridLayout.Row({ "proxyAddress", "proxyPort" })
+        @GridLayout.Row({ "password" })
 })
 @Documentation("TODO fill the documentation for this configuration")
 public class BasicAuthDataStore implements Serializable {
@@ -40,18 +38,4 @@ public class BasicAuthDataStore implements Serializable {
     @Credential
     @Documentation("TODO fill the documentation for this parameter")
     private String password;
-
-    @Option
-    @Documentation("TODO fill the documentation for this parameter")
-    private boolean isUseProxy;
-
-    @Option
-    @ActiveIf(target = "isUseProxy", value = "true")
-    @Documentation("TODO fill the documentation for this parameter")
-    private String proxyAddress;
-
-    @Option
-    @ActiveIf(target = "isUseProxy", value = "true")
-    @Documentation("TODO fill the documentation for this parameter")
-    private int proxyPort;
 }

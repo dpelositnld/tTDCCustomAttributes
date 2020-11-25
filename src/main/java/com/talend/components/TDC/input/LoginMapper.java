@@ -1,6 +1,6 @@
 package com.talend.components.TDC.input;
 
-import com.talend.components.TDC.client.LoginClient;
+import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.LoginMapperConfiguration;
 import com.talend.components.TDC.service.LoginService;
 import com.talend.components.TDC.source.LoginSource;
@@ -26,21 +26,18 @@ public class LoginMapper implements Serializable {
     private final LoginMapperConfiguration configuration;
     private final LoginService service;
     private final RecordBuilderFactory recordBuilderFactory;
-    private final LoginClient loginClient;
 
     public LoginMapper(@Option("configuration") final LoginMapperConfiguration configuration,
                        final RecordBuilderFactory recordBuilderFactory,
-                       final LoginService service,
-                       final LoginClient loginClient) {
+                       final LoginService service) {
         this.configuration = configuration;
         this.recordBuilderFactory = recordBuilderFactory;
         this.service = service;
-        this.loginClient = loginClient;
     }
 
     @PostConstruct
     public void init() {
-        loginClient.base(configuration.getDataSet().getDataStore().getEndpoint());
+        service.getClient().base(configuration.getDataSet().getDataStore().getEndpoint());
     }
 
     @Assessor
@@ -55,6 +52,6 @@ public class LoginMapper implements Serializable {
 
     @Emitter
     public LoginSource create() {
-        return new LoginSource(configuration, recordBuilderFactory, loginClient);
+        return new LoginSource(configuration, recordBuilderFactory, service);
     }
 }
