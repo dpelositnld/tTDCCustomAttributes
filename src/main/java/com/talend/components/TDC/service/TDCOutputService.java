@@ -1,7 +1,7 @@
 package com.talend.components.TDC.service;
 
 import com.talend.components.TDC.client.TDCAPIClient;
-import com.talend.components.TDC.configuration.CustomAttributesOutputConfiguration;
+import com.talend.components.TDC.configuration.TDCOutputConfiguration;
 import com.talend.components.TDC.dataset.TDCInputDataSet;
 import lombok.Data;
 import org.json.JSONArray;
@@ -24,7 +24,7 @@ import java.util.List;
 
 @Data
 @Service
-public class CustomAttributesService {
+public class TDCOutputService {
     @Service
     TDCAPIClient client;
 
@@ -82,7 +82,7 @@ public class CustomAttributesService {
         String token,
         Record record,
         String TDCObjectID,
-        List<CustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes){
+        List<TDCOutputConfiguration.TDCAttribute> TDCAttributes){
         JsonObject responseBody;
 
         if (!isUseExistingSession)
@@ -102,7 +102,7 @@ public class CustomAttributesService {
         return responseBody;
     }
 
-    private JSONObject buildSetAttributesTDCRestBody(Record record, String TDCObjectID, List<CustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes) {
+    private JSONObject buildSetAttributesTDCRestBody(Record record, String TDCObjectID, List<TDCOutputConfiguration.TDCAttribute> TDCAttributes) {
         String message;
         JSONObject jsonSetAttributes = new JSONObject();
 
@@ -136,9 +136,9 @@ public class CustomAttributesService {
         return jsonSetAttributes;
     }
 
-    private boolean isTDCAttribute(String name, List<CustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes) {
+    private boolean isTDCAttribute(String name, List<TDCOutputConfiguration.TDCAttribute> TDCAttributes) {
         boolean isAttribute = false;
-        for (CustomAttributesOutputConfiguration.TDCAttribute attr : TDCAttributes) {
+        for (TDCOutputConfiguration.TDCAttribute attr : TDCAttributes) {
             if (attr.getName().equals(name)) {
                 isAttribute = true;
                 break;

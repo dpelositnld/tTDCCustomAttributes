@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.talend.components.TDC.dataset.TDCInputDataSet;
 
+import com.talend.components.TDC.dataset.TDCOutputDataSet;
 import lombok.Data;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.BuiltInSuggestable;
@@ -19,26 +20,14 @@ import org.talend.sdk.component.api.meta.Documentation;
 @Data
 @GridLayout({
         @GridLayout.Row({ "dataSet" }),
-        @GridLayout.Row({ "isUseExistingSession" }),
-        @GridLayout.Row({ "token" }),
         @GridLayout.Row({ "TDCObjectID" }),
         @GridLayout.Row({ "TDCAttributes" })
 })
 @Documentation("TODO fill the documentation for this configuration")
-public class CustomAttributesOutputConfiguration implements Serializable {
-    @Option
-    @ActiveIf(target = "isUseExistingSession", value = "false")
-    @Documentation("TODO fill the documentation for this parameter")
-    private TDCInputDataSet dataSet;
-
+public class TDCOutputConfiguration implements Serializable {
     @Option
     @Documentation("TODO fill the documentation for this parameter")
-    private boolean isUseExistingSession = false;
-
-    @Option
-    @ActiveIf(target = "isUseExistingSession", value = "true")
-    @Documentation("TODO fill the documentation for this parameter")
-    private String token;
+    private TDCOutputDataSet dataSet;
 
     @Option
     @Required

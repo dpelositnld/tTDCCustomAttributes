@@ -8,7 +8,7 @@ import java.util.*;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import com.talend.components.TDC.configuration.CustomAttributesOutputConfiguration;
+import com.talend.components.TDC.configuration.TDCOutputConfiguration;
 import org.talend.sdk.component.api.component.Icon;
 import org.talend.sdk.component.api.component.Version;
 import org.talend.sdk.component.api.configuration.Option;
@@ -20,21 +20,21 @@ import org.talend.sdk.component.api.processor.Input;
 import org.talend.sdk.component.api.processor.Processor;
 import org.talend.sdk.component.api.record.Record;
 
-import com.talend.components.TDC.service.CustomAttributesService;
+import com.talend.components.TDC.service.TDCOutputService;
 
 @Version(1) // default version is 1, if some configuration changes happen between 2 versions you can add a migrationHandler
-@Icon(value = CUSTOM, custom = "CustomAttributesOutput") // icon is located at src/main/resources/icons/CustomAttributesOutput.svg
-@Processor(name = "CustomAttributesOutput", family = "TDC")
+@Icon(value = CUSTOM, custom = "TDCOutput") // icon is located at src/main/resources/icons/TDCOutput.svg
+@Processor(name = "Output", family = "TDC")
 @Documentation("TODO fill the documentation for this processor")
-public class CustomAttributesOutput implements Serializable {
-    private final CustomAttributesOutputConfiguration configuration;
-    private final CustomAttributesService service;
+public class TDCOutput implements Serializable {
+    private final TDCOutputConfiguration configuration;
+    private final TDCOutputService service;
 
-    List<CustomAttributesOutputConfiguration.TDCAttribute> TDCAttributes;
+    List<TDCOutputConfiguration.TDCAttribute> TDCAttributes;
 
-    public CustomAttributesOutput(@Option("customAttributesConfiguration")
-                                  final CustomAttributesOutputConfiguration configuration,
-                                  final CustomAttributesService service) {
+    public TDCOutput(@Option("customAttributesConfiguration")
+                                  final TDCOutputConfiguration configuration,
+                     final TDCOutputService service) {
 
         this.configuration = configuration;
         this.service = service;
@@ -56,10 +56,10 @@ public class CustomAttributesOutput implements Serializable {
     public void onNext(
             @Input final Record defaultInput) {
         service.setAttributes(
-                configuration.isUseExistingSession(),
+                configuration.getDataSet().isUseExistingSession(),
                 configuration.getDataSet().getDataStore().getUsername(),
                 configuration.getDataSet().getDataStore().getPassword(),
-                configuration.getToken(),
+                configuration.getDataSet().getToken(),
                 defaultInput,
                 configuration.getTDCObjectID(),
                 configuration.getTDCAttributes()
