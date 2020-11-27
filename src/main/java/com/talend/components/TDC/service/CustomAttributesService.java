@@ -2,7 +2,7 @@ package com.talend.components.TDC.service;
 
 import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.CustomAttributesOutputConfiguration;
-import com.talend.components.TDC.dataset.BasicAuthDataSet;
+import com.talend.components.TDC.dataset.TDCInputDataSet;
 import lombok.Data;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,10 +12,8 @@ import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.asyncvalidation.AsyncValidation;
 import org.talend.sdk.component.api.service.asyncvalidation.ValidationResult;
-import org.talend.sdk.component.api.service.completion.DynamicValues;
 import org.talend.sdk.component.api.service.completion.SuggestionValues;
 import org.talend.sdk.component.api.service.completion.Suggestions;
-import org.talend.sdk.component.api.service.completion.Values;
 import org.talend.sdk.component.api.service.http.Response;
 
 import javax.json.JsonObject;
@@ -31,25 +29,15 @@ public class CustomAttributesService {
     TDCAPIClient client;
 
     @Service
-    LoginService loginService;
-
-    @Service
-    LogoutService logoutService;
+    AuthenticationService authService;
 
     // you can put logic here you can reuse in components
     @Suggestions("loadModules")
-    public SuggestionValues loadModules(@Option final BasicAuthDataSet dataset) {
+    public SuggestionValues loadModules(@Option final TDCInputDataSet dataset) {
         return new SuggestionValues(false,
                 Arrays
                         .asList(new SuggestionValues.Item("1", "Delete"), new SuggestionValues.Item("2", "Insert"),
                                 new SuggestionValues.Item("3", "Update")));
-    }
-
-    @DynamicValues("valuesProvider")
-    public Values proposals() {
-        return new Values(Arrays
-                .asList(new Values.Item("1", "Delete"), new Values.Item("2", "Insert"),
-                        new Values.Item("3", "Update")));
     }
 
     @Suggestions("suggestionsProvider")
@@ -98,7 +86,7 @@ public class CustomAttributesService {
         JsonObject responseBody;
 
         if (!isUseExistingSession)
-            token = loginService.getToken(username, password);
+            token = authService.getToken(username, password);
 
         JSONObject payload = buildSetAttributesTDCRestBody(record, TDCObjectID, TDCAttributes);
 
@@ -108,8 +96,8 @@ public class CustomAttributesService {
         } else
             throw new RuntimeException(response.error(String.class));
 
-        if (isUseExistingSession)
-            logoutService.logout(token);
+        if (!isUseExistingSession)
+            authService.logout(token);
 
         return responseBody;
     }

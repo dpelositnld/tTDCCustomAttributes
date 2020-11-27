@@ -1,9 +1,11 @@
 package com.talend.components.TDC.input;
 
-import com.talend.components.TDC.client.TDCAPIClient;
-import com.talend.components.TDC.configuration.LoginMapperConfiguration;
-import com.talend.components.TDC.service.LoginService;
+import com.talend.components.TDC.configuration.TDCInputConfiguration;
+import com.talend.components.TDC.dataset.TDCInputDataSet;
+import com.talend.components.TDC.service.AuthenticationService;
 import com.talend.components.TDC.source.LoginSource;
+import com.talend.components.TDC.source.LogoutSource;
+import com.talend.components.TDC.source.TDCInputSource;
 import org.talend.sdk.component.api.component.Icon;
 import org.talend.sdk.component.api.component.Version;
 import org.talend.sdk.component.api.configuration.Option;
@@ -20,16 +22,16 @@ import static org.talend.sdk.component.api.component.Icon.IconType.CUSTOM;
 
 @Version(1) // default version is 1, if some configuration changes happen between 2 versions you can add a migrationHandler
 @Icon(value = CUSTOM, custom = "CustomAttributesOutput") // icon is located at src/main/resources/icons/CustomAttributesOutput.svg
-@PartitionMapper(name = "Login", family = "TDC")
+@PartitionMapper(name = "Input", family = "TDC")
 @Documentation("TODO fill the documentation for this processor")
-public class LoginMapper implements Serializable {
-    private final LoginMapperConfiguration configuration;
-    private final LoginService service;
+public class TDCInput implements Serializable {
+    private final TDCInputConfiguration configuration;
+    private final AuthenticationService service;
     private final RecordBuilderFactory recordBuilderFactory;
 
-    public LoginMapper(@Option("loginConfiguration") final LoginMapperConfiguration configuration,
-                       final RecordBuilderFactory recordBuilderFactory,
-                       final LoginService service) {
+    public TDCInput(@Option("configuration") final TDCInputConfiguration configuration,
+                    final RecordBuilderFactory recordBuilderFactory,
+                    final AuthenticationService service) {
         this.configuration = configuration;
         this.recordBuilderFactory = recordBuilderFactory;
         this.service = service;
@@ -46,12 +48,17 @@ public class LoginMapper implements Serializable {
     }
 
     @Split
-    public List<LoginMapper> split(@PartitionSize final long bundles) {
+    public List<TDCInput> split(@PartitionSize final long bundles) {
         return Collections.singletonList(this);
     }
 
     @Emitter
-    public LoginSource create() {
-        return new LoginSource(configuration, recordBuilderFactory, service);
+    public TDCInputSource create() {
+        TDCInputSource source = null;
+        if (configuration.getDataSet().getOperationType().equals(TDCInputDataSet.OperationType.Login))
+            source = new LoginSource(configuration, recordBuilderFactory, service);
+        else if (configuration.getDataSet().getOperationType().equals(TDCInputDataSet.OperationType.Logout))
+            source = new LogoutSource(configuration, recordBuilderFactory, service);
+        return source;
     }
 }

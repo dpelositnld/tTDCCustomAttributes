@@ -1,9 +1,10 @@
 package com.talend.components.TDC.service;
 
 import com.talend.components.TDC.client.TDCAPIClient;
-import com.talend.components.TDC.dataset.BasicAuthDataSet;
+import com.talend.components.TDC.dataset.TDCInputDataSet;
 import com.talend.components.TDC.datastore.BasicAuthDataStore;
 import lombok.Data;
+import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.healthcheck.HealthCheck;
@@ -16,15 +17,36 @@ import javax.json.JsonObject;
 
 @Data
 @Service
-public class LoginService {
+public class AuthenticationService {
     @Service
     TDCAPIClient client;
 
     @DiscoverSchema
-    public Schema guessSchema(BasicAuthDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
-        Schema.Builder schemaBuilder = recordBuilderFactory.newSchemaBuilder(Schema.Type.RECORD);
-        schemaBuilder.withEntry(recordBuilderFactory.newEntryBuilder().withName("token").withType(Schema.Type.STRING).withNullable(false).build());
-        return schemaBuilder.build();
+    public Schema guessSchema(@Option TDCInputDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
+        Schema schema = null;
+        if (dataSet.getOperationType().equals(TDCInputDataSet.OperationType.Login))
+            schema = guessSchemaLogin(dataSet, recordBuilderFactory);
+        else if (dataSet.getOperationType().equals(TDCInputDataSet.OperationType.Logout))
+            schema = guessSchemaLogout(dataSet, recordBuilderFactory);
+        return schema;
+    }
+
+    /*
+    @DynamicValues("operationProvider")
+    public Values proposals() {
+        return new Values(Arrays
+                .asList(new Values.Item("1", "Login"),
+                        new Values.Item("2", "Logout")
+                        ));
+    }
+*/
+    public JsonObject logout(String token) {
+        final Response<JsonObject> response = client.logout("text/plain", token);
+        if (response.status() == 200) {
+            return response.body();
+        }
+
+        throw new RuntimeException(response.error(String.class));
     }
 
     @HealthCheck
@@ -56,5 +78,20 @@ public class LoginService {
     public String getToken(String username, String password) {
         JsonObject response = login(username, password);
         return response.getJsonObject("result").getString("token");
+    }
+
+    private Schema guessSchemaLogin(TDCInputDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
+        Schema.Builder schemaBuilder = recordBuilderFactory.newSchemaBuilder(Schema.Type.RECORD);
+        schemaBuilder.withEntry(recordBuilderFactory.newEntryBuilder().withName("token").withType(Schema.Type.STRING).withNullable(false).build());
+        return schemaBuilder.build();
+    }
+
+    private Schema guessSchemaLogout(TDCInputDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
+        Schema.Builder schemaBuilder = recordBuilderFactory.newSchemaBuilder(Schema.Type.RECORD);
+        schemaBuilder
+                .withEntry(recordBuilderFactory.newEntryBuilder().withName("logoutStatus").withType(Schema.Type.STRING).withNullable(false).build())
+                .withEntry(recordBuilderFactory.newEntryBuilder().withName("logoutError").withType(Schema.Type.STRING).withNullable(false).build())
+        ;
+        return schemaBuilder.build();
     }
 }
