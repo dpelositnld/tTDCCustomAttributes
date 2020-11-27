@@ -3,7 +3,7 @@ package com.talend.components.TDC.configuration;
 import java.io.Serializable;
 import java.util.List;
 
-import com.talend.components.TDC.dataset.LoginDataset;
+import com.talend.components.TDC.dataset.BasicAuthDataSet;
 
 import lombok.Data;
 import org.talend.sdk.component.api.configuration.Option;
@@ -29,7 +29,7 @@ public class CustomAttributesOutputConfiguration implements Serializable {
     @Option
     @ActiveIf(target = "isUseExistingSession", value = "false")
     @Documentation("TODO fill the documentation for this parameter")
-    private LoginDataset dataSet;
+    private BasicAuthDataSet dataSet;
 
     @Option
     @Documentation("TODO fill the documentation for this parameter")
@@ -63,11 +63,6 @@ public class CustomAttributesOutputConfiguration implements Serializable {
     @Documentation("")
     String TDC_ObjectID2;
     */
-
-    public CustomAttributesOutputConfiguration setDataset(LoginDataset dataSet) {
-        this.dataSet = dataSet;
-        return this;
-    }
 
     @Data
     @GridLayout({

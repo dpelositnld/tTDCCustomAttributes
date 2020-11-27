@@ -11,12 +11,12 @@ import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
 
 @Data
-@DataSet("Dataset")
+@DataSet("BasicAuthDataSet")
 @GridLayout({
         @GridLayout.Row({ "dataStore" })
 })
 @Documentation("TODO fill the documentation for this configuration")
-public class LoginDataset implements Serializable {
+public class BasicAuthDataSet implements Serializable {
     @Option
     @Documentation("TODO fill the documentation for this parameter")
     private BasicAuthDataStore dataStore;

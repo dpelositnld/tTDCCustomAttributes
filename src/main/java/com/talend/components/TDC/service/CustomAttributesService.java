@@ -2,8 +2,7 @@ package com.talend.components.TDC.service;
 
 import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.CustomAttributesOutputConfiguration;
-import com.talend.components.TDC.dataset.LoginDataset;
-import com.talend.components.TDC.datastore.BasicAuthDataStore;
+import com.talend.components.TDC.dataset.BasicAuthDataSet;
 import lombok.Data;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,7 +18,6 @@ import org.talend.sdk.component.api.service.completion.Suggestions;
 import org.talend.sdk.component.api.service.completion.Values;
 import org.talend.sdk.component.api.service.http.Response;
 
-import javax.json.Json;
 import javax.json.JsonObject;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -40,7 +38,7 @@ public class CustomAttributesService {
 
     // you can put logic here you can reuse in components
     @Suggestions("loadModules")
-    public SuggestionValues loadModules(@Option final LoginDataset dataset) {
+    public SuggestionValues loadModules(@Option final BasicAuthDataSet dataset) {
         return new SuggestionValues(false,
                 Arrays
                         .asList(new SuggestionValues.Item("1", "Delete"), new SuggestionValues.Item("2", "Insert"),

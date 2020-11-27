@@ -1,7 +1,7 @@
 package com.talend.components.TDC.service;
 
 import com.talend.components.TDC.client.TDCAPIClient;
-import com.talend.components.TDC.dataset.LoginDataset;
+import com.talend.components.TDC.dataset.BasicAuthDataSet;
 import lombok.Data;
 import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.service.Service;
@@ -18,7 +18,7 @@ public class LogoutService {
     TDCAPIClient client;
 
     @DiscoverSchema
-    public Schema guessSchema(LoginDataset dataSet, final RecordBuilderFactory recordBuilderFactory) {
+    public Schema guessSchema(BasicAuthDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
         Schema.Builder schemaBuilder = recordBuilderFactory.newSchemaBuilder(Schema.Type.RECORD);
         schemaBuilder
                 .withEntry(recordBuilderFactory.newEntryBuilder().withName("logoutStatus").withType(Schema.Type.STRING).withNullable(false).build())

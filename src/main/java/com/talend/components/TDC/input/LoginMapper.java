@@ -27,7 +27,7 @@ public class LoginMapper implements Serializable {
     private final LoginService service;
     private final RecordBuilderFactory recordBuilderFactory;
 
-    public LoginMapper(@Option("configuration") final LoginMapperConfiguration configuration,
+    public LoginMapper(@Option("loginConfiguration") final LoginMapperConfiguration configuration,
                        final RecordBuilderFactory recordBuilderFactory,
                        final LoginService service) {
         this.configuration = configuration;

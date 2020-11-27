@@ -28,7 +28,7 @@ public class LogoutMapper implements Serializable {
     private final LogoutService service;
     private final RecordBuilderFactory recordBuilderFactory;
 
-    public LogoutMapper(@Option("configuration") final LogoutMapperConfiguration configuration,
+    public LogoutMapper(@Option("logoutConfiguration") final LogoutMapperConfiguration configuration,
                         final RecordBuilderFactory recordBuilderFactory,
                         final LogoutService service) {
         this.configuration = configuration;

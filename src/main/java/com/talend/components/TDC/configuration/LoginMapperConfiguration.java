@@ -2,10 +2,9 @@ package com.talend.components.TDC.configuration;
 
 import java.io.Serializable;
 
-import com.talend.components.TDC.dataset.LoginDataset;
+import com.talend.components.TDC.dataset.BasicAuthDataSet;
 import lombok.Data;
 import org.talend.sdk.component.api.configuration.Option;
-import org.talend.sdk.component.api.configuration.type.DataSet;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
 
@@ -20,5 +19,5 @@ public class LoginMapperConfiguration implements Serializable {
 
     @Option
     @Documentation("TODO fill the documentation for this parameter")
-    private LoginDataset dataSet;
+    private BasicAuthDataSet dataSet;
 }
