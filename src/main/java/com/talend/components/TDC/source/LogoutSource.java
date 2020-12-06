@@ -4,18 +4,23 @@ import com.talend.components.TDC.configuration.TDCInputConfiguration;
 import com.talend.components.TDC.service.AuthenticationService;
 import org.talend.sdk.component.api.input.Producer;
 import org.talend.sdk.component.api.record.Record;
-import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 
 import javax.annotation.PostConstruct;
 import javax.json.JsonObject;
 
-public class LogoutSource extends TDCInputSource {
+public class LogoutSource {
+    final TDCInputConfiguration configuration;
+    final RecordBuilderFactory recordBuilderFactory;
+    final AuthenticationService service;
+
     private JsonObject response;
     private boolean recordConsumed = false;
 
     public LogoutSource(TDCInputConfiguration configuration, RecordBuilderFactory recordBuilderFactory, AuthenticationService service) {
-        super(configuration, recordBuilderFactory, service);
+        this.configuration = configuration;
+        this.recordBuilderFactory = recordBuilderFactory;
+        this.service = service;
     }
 
     @PostConstruct

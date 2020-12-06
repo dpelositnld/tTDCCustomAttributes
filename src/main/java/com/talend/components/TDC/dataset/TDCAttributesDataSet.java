@@ -12,15 +12,14 @@ import org.talend.sdk.component.api.meta.Documentation;
 import java.io.Serializable;
 
 @Data
-@DataSet("TDCOutputDataSet")
+@DataSet("TDCAttributesDataSet")
 @GridLayout({
         @GridLayout.Row({ "dataStore" }),
         @GridLayout.Row({ "isUseExistingSession" }),
-        @GridLayout.Row({ "token" }),
-        @GridLayout.Row({ "operationType" })
+        @GridLayout.Row({ "token" })
 })
 @Documentation("TODO fill the documentation for this configuration")
-public class TDCOutputDataSet implements Serializable {
+public class TDCAttributesDataSet implements Serializable {
     public enum OperationType {
         SetAttributes
     }
@@ -37,8 +36,4 @@ public class TDCOutputDataSet implements Serializable {
     @ActiveIf(target = "isUseExistingSession", value = "true")
     @Documentation("TODO fill the documentation for this parameter")
     private String token;
-
-    @Option
-    @Documentation("")
-    OperationType operationType = OperationType.SetAttributes;
 }

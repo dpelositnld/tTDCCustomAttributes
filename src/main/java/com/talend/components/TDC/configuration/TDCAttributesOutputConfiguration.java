@@ -3,13 +3,14 @@ package com.talend.components.TDC.configuration;
 import java.io.Serializable;
 import java.util.List;
 
-import com.talend.components.TDC.dataset.TDCInputDataSet;
+import com.talend.components.TDC.dataset.TDCAttributesDataSet;
 
-import com.talend.components.TDC.dataset.TDCOutputDataSet;
+import com.talend.components.TDC.service.TDCAttributesService;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.BuiltInSuggestable;
-import org.talend.sdk.component.api.configuration.condition.ActiveIf;
+import org.talend.sdk.component.api.configuration.action.Suggestable;
 import org.talend.sdk.component.api.configuration.constraint.Required;
 import org.talend.sdk.component.api.configuration.constraint.Uniques;
 import org.talend.sdk.component.api.configuration.ui.DefaultValue;
@@ -24,10 +25,10 @@ import org.talend.sdk.component.api.meta.Documentation;
         @GridLayout.Row({ "TDCAttributes" })
 })
 @Documentation("TODO fill the documentation for this configuration")
-public class TDCOutputConfiguration implements Serializable {
+public class TDCAttributesOutputConfiguration implements Serializable {
     @Option
     @Documentation("TODO fill the documentation for this parameter")
-    private TDCOutputDataSet dataSet;
+    TDCAttributesDataSet dataSet;
 
     @Option
     @Required
@@ -38,6 +39,7 @@ public class TDCOutputConfiguration implements Serializable {
     @Option
     @Required
     @BuiltInSuggestable(value = BuiltInSuggestable.Name.INCOMING_SCHEMA_ENTRY_NAMES)
+    @Suggestable(TDCAttributesService.INCOMING_PATHS_DYNAMIC)
     @Documentation("")
     String TDCObjectID;
 
@@ -55,11 +57,11 @@ public class TDCOutputConfiguration implements Serializable {
 
     @Data
     @GridLayout({
-            @GridLayout.Row({ "name" }),
-            @GridLayout.Row({ "comment" })
+            @GridLayout.Row({ "field" }),
+            @GridLayout.Row({ "attribute" })
     })
-    public static class TDCAttribute {
-        /*
+    public static class TDCAttribute implements Serializable {
+/*
         @Option
         @Proposable("valuesProvider")
         @Documentation("")
@@ -68,12 +70,15 @@ public class TDCOutputConfiguration implements Serializable {
 
         @Option
         @BuiltInSuggestable(value = BuiltInSuggestable.Name.INCOMING_SCHEMA_ENTRY_NAMES)
+        @Suggestable(TDCAttributesService.INCOMING_PATHS_DYNAMIC)
+        @Required
         @Documentation("")
-        private String name;
+        private String field;
 
         @Option
-        @DefaultValue("")
+        @Suggestable("loadCustomAttributes")
+        @Required
         @Documentation("")
-        private String comment;
+        private String attribute;
     }
 }
