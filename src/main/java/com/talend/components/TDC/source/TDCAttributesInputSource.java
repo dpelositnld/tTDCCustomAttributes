@@ -1,5 +1,6 @@
 package com.talend.components.TDC.source;
 
+import com.talend.components.TDC.configuration.TDCAttributesInputConfiguration;
 import com.talend.components.TDC.configuration.TDCAttributesOutputConfiguration;
 import com.talend.components.TDC.dataset.TDCAttributesDataSet;
 import com.talend.components.TDC.service.TDCAttributesService;
@@ -22,19 +23,15 @@ import java.util.List;
 import java.util.ListIterator;
 
 @Slf4j
-@Version
-@Icon(value = Icon.IconType.CUSTOM, custom = "TDCAttributesOutput")
-@Emitter(name = "Input", family = "TDC")
-@Documentation("")
 public class TDCAttributesInputSource implements Serializable {
-    final TDCAttributesOutputConfiguration config;
+    final TDCAttributesInputConfiguration config;
     final RecordBuilderFactory recordBuilderFactory;
     final TDCAttributesService service;
 
     int objectIdsIdx = 0;
     JsonArray MQLRecords;
 
-    public TDCAttributesInputSource(@Option("configuration") final TDCAttributesOutputConfiguration config, final TDCAttributesService service, final RecordBuilderFactory recordBuilderFactory) {
+    public TDCAttributesInputSource(@Option("configuration") final TDCAttributesInputConfiguration config, final TDCAttributesService service, final RecordBuilderFactory recordBuilderFactory) {
         this.config = config;
         this.recordBuilderFactory = recordBuilderFactory;
         this.service = service;
@@ -42,31 +39,28 @@ public class TDCAttributesInputSource implements Serializable {
 
     @PostConstruct
     public void init(){
-        System.out.println("********************TDCAttributesInputSource.init() begin");
-
-        JsonObject response = service.getCustomAttributes(config.getDataSet().getAttributes(), config.getDataSet().getConfigurationPath());
-        MQLRecords = response.getJsonObject("result").getJsonArray("attributes");
-        System.out.println("********************TDCAttributesInputSource.init() end");
-    }
-
-    @Assessor
-    public long estimateSize() {
-        return 1l;
+        JsonObject response = service.getCustomAttributes(config.getDataSet());
+        System.out.println(response.toString());
+        MQLRecords = response.getJsonArray("result");
     }
 
     @Producer
     public Record produces() {
         Record record = null;
         if (objectIdsIdx < MQLRecords.size()) {
-            for (ListIterator<JsonValue> it = MQLRecords.listIterator(); it.hasNext(); ) {
-                JsonObject MQLRecord = it.next().asJsonObject();
-                JsonObject attrTypeJson = MQLRecord.getJsonObject("attributeType");
-                String attr = attrTypeJson.getString("name");
-                String value = MQLRecord.getString("value");
+            JsonArray MQLRecord = MQLRecords.getJsonObject(objectIdsIdx).getJsonArray("attributes");
 
-                record = recordBuilderFactory.newRecordBuilder().withString(attr, value).build();
+            Record.Builder builder = recordBuilderFactory.newRecordBuilder();
+            for (ListIterator<JsonValue> it = MQLRecord.listIterator(); it.hasNext(); ) {
+                JsonObject attribute = it.next().asJsonObject();
+                JsonObject attrTypeJson = attribute.getJsonObject("attributeType");
+                String attr = attrTypeJson.getString("name");
+                String value = attribute.getString("value");
+                builder.withString(attr, value);
             }
-        }
+
+            record = builder.build();
+         }
         objectIdsIdx++;
         return record;
     }

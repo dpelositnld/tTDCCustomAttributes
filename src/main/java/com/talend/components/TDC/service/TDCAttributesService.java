@@ -21,6 +21,7 @@ import org.talend.sdk.component.api.service.completion.Values;
 import org.talend.sdk.component.api.service.http.Response;
 
 import javax.json.*;
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.net.HttpCookie;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -48,20 +49,8 @@ public class TDCAttributesService {
     public Values getIncomingPathsDynamicValues() {
         return new Values(Collections.EMPTY_LIST);
     }
-/*
-    @Suggestions("loadFieldsFake")
-    public SuggestionValues loadFields(@Option final TDCInputDataSet dataset) {
-
-        return new SuggestionValues(false,
-                Arrays
-                        .asList(new SuggestionValues.Item("Id", "Id"),
-                                new SuggestionValues.Item("CustomAttribute1", "CustomAttribute1"),
-                                new SuggestionValues.Item("CustomAttribute2", "CustomAttribute2"),
-                                new SuggestionValues.Item("CustomAttribute3", "CustomAttribute3")));
 
 
-    }
-*/
     @AsyncValidation("url")
     public ValidationResult doValidate(@Option("url") String url) {
         // validate the property
@@ -144,15 +133,7 @@ public class TDCAttributesService {
         String TDCObjectTypes = "Configuration";
         String TDCRepositoryPath = "/";
 
-        client.base(dataStore.getEndpoint());
-
-        Response<JsonObject> response = client.repositoryBrowse(dataStore, client, TDCObjectTypes, TDCRepositoryPath);
-        JsonObject responseBody;
-
-        if (response.status() == 200)
-            responseBody = response.body();
-        else
-            throw new RuntimeException(response.error(String.class));
+        JsonObject responseBody = repositoryBrowse(dataStore, TDCRepositoryPath, TDCObjectTypes);
 
         JsonObject resultJson = responseBody.getJsonObject("result");
 
@@ -168,50 +149,92 @@ public class TDCAttributesService {
         return values;
     }
 
-    public JsonObject getCustomAttributes(List<String> attributes, String configurationPath){
-        String selectClause = "";
-        String fromClause = configurationPath;
-        String whereClause = "";
-        int pageSize = 100;
-        int pageNumber = 1;
-
-        for (String attr: attributes) {
-            selectClause = !selectClause.isEmpty()? selectClause + ",": selectClause;
-            selectClause += "{" + attr + "}";
-
-            whereClause = !selectClause.isEmpty()? selectClause + " OR ": selectClause;
-            selectClause += "{" + attr + "} exists";
-        }
-
-        return executeMQL(selectClause, fromClause, whereClause, pageSize, pageNumber);
-    }
-
-    public JsonObject executeMQL(String selectClause, String fromClause, String whereClause, int pageSize, int pageNumber){
-        JsonObject payload = buildExecuteMQLPayload(selectClause, fromClause, whereClause, pageSize, pageNumber);
-
-        System.out.println("***********************************" + payload.toString());
-
+    private JsonObject repositoryBrowse(BasicAuthDataStore dataStore, String TDCRepositoryPath, String TDCObjectTypes){
         JsonObject responseBody;
-        Response<JsonObject> response = client.executeMQLQuery(payload);
+        client.base(dataStore.getEndpoint());
+
+        String token = "";
+        if (!dataStore.isUseExistingSession())
+            token = authService.getToken(dataStore.getUsername(), dataStore.getPassword());
+        else
+            token = dataStore.getToken();
+
+        Response<JsonObject> response = client.repositoryBrowse("application/json", token, TDCObjectTypes, TDCRepositoryPath);
 
         if (response.status() == 200)
             responseBody = response.body();
         else
             throw new RuntimeException(response.error(String.class));
 
+        if (!dataStore.isUseExistingSession())
+            authService.logout(token);
+
         return responseBody;
     }
 
-    private JsonObject buildExecuteMQLPayload(String selectClause, String fromClause, String whereClause, int pageSize, int pageNumber) {
-        JsonObjectBuilder jsonPayload = Json.createObjectBuilder();
+    public JsonObject getCustomAttributes(TDCAttributesDataSet dataSet){
+        int pageSize = 100;
+        int pageNumber = 1;
+        JsonObject MQLQuery = buildExecuteMQLPayload(dataSet, pageSize, pageNumber);
+        return executeMQL(dataSet.getDataStore(), MQLQuery);
+    }
 
-        jsonPayload.add("select", selectClause);
-        jsonPayload.add("from", fromClause);
-        jsonPayload.add("where", whereClause);
-        jsonPayload.add("pageSize", pageSize);
-        jsonPayload.add("pageNumber", pageNumber);
+    public JsonObject executeMQL(BasicAuthDataStore dataStore, JsonObject MQLPayload){
+        JsonObject responseBody;
+        client.base(dataStore.getEndpoint());
 
-        return jsonPayload.build();
+        System.setProperty("http.proxyHost","host.docker.internal");
+        System.setProperty("https.proxyHost","host.docker.internal");
+        System.setProperty("http.proxyPort","8888");
+        System.setProperty("https.proxyPort","8888");
+
+        String token = "";
+        if (!dataStore.isUseExistingSession())
+            token = authService.getToken(dataStore.getUsername(), dataStore.getPassword());
+        else
+            token = dataStore.getToken();
+
+        Response<JsonObject> response = client.executeMQLQuery("application/json", token, MQLPayload);
+
+        if (response.status() == 200)
+            responseBody = response.body();
+        else
+            throw new RuntimeException(response.error(String.class));
+
+        if (!dataStore.isUseExistingSession())
+            authService.logout(token);
+
+        return responseBody;
+    }
+
+    private JsonObject buildExecuteMQLPayload(TDCAttributesDataSet dataSet, int pageSize, int pageNumber) {
+        JsonObject jsonPayload;
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+
+        String selectClause = "";
+        String fromClause = dataSet.getConfigurationPath();
+        String whereClause = "";
+
+        selectClause += "#Name#, #Object Stable Id#";
+        for (String attr: dataSet.getAttributes()) {
+            selectClause = !selectClause.isEmpty()? selectClause + ",": selectClause;
+            selectClause += "{" + attr + "}";
+
+            whereClause = !whereClause.isEmpty()? whereClause + " OR ": whereClause;
+            whereClause += "{" + attr + "} exists";
+        }
+
+        jsonPayload = builder
+                .add("select", selectClause)
+                .add("from", fromClause)
+                .add("where", whereClause)
+                .add("pageSize", pageSize)
+                .add("pageNumber", pageNumber)
+                .build();
+
+        System.out.println(jsonPayload.toString());
+
+        return jsonPayload;
     }
 
     private void getConfigurationPaths(String parentPath, JsonArray links, List<String> configurationPaths){
@@ -313,5 +336,17 @@ public class TDCAttributesService {
         return jsonSetAttributes.build();
     }
 
+    public String getToken(String username, String password) {
+        JsonObject response = login(username, password);
+        return response.getJsonObject("result").getString("token");
+    }
 
+    public JsonObject login(String username, String password) {
+        final Response<JsonObject> response = client.login(username, password, true);
+        if (response.status() == 200) {
+            return response.body();
+        }
+
+        throw new RuntimeException(response.error(String.class));
+    }
 }

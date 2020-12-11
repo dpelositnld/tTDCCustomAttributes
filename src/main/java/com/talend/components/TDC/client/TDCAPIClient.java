@@ -28,16 +28,16 @@ public interface TDCAPIClient extends HttpClient {
     );
 
     @Request(path = "/MM/rest/v1/entities/executeMQLQuery", method = "POST" )
-    @UseConfigurer(TDCRestConfigurer.class)
     Response<JsonObject> executeMQLQuery(
+            @Header("Content-Type") String contentType,
+            @Header("api_key") String token,
             JsonObject payload
     );
 
     @Request(path = "/MM/rest/v1/operations/repositoryBrowse", method = "GET" )
-    @UseConfigurer(TDCRestConfigurer.class)
     Response<JsonObject> repositoryBrowse(
-            @ConfigurerOption("dataStore") BasicAuthDataStore dataStore,
-            @ConfigurerOption("httpClient") TDCAPIClient httpClient,
+            @Header("accept") String accept,
+            @Header("api_key") String token,
             @Query("objectTypes") String objectTypes,
             @Query("repositoryPath") String repositoryPath
     );

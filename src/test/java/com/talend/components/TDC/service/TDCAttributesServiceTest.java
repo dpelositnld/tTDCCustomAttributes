@@ -41,6 +41,7 @@ class TDCAttributesServiceTest {
     private AuthenticationService authService;
 
     TDCAttributesOutputConfiguration config;
+    TDCAPIClient client;
 
     @BeforeAll
     void setup() {
@@ -57,6 +58,14 @@ class TDCAttributesServiceTest {
         ds.getDataStore().setEndpoint("http://192.168.1.5:11480");
         ds.getDataStore().setUsername("Administrator");
         ds.getDataStore().setPassword("Administrator");
+
+        List<String> attributes = new ArrayList<>();
+        attributes.add("CustomAttribute1");
+        attributes.add("CustomAttribute2");
+        attributes.add("CustomAttribute3");
+        ds.setAttributes(attributes);
+
+        ds.setConfigurationPath("/Configuration/Published");
 
         config.setDataSet(ds);
     }
@@ -153,7 +162,35 @@ class TDCAttributesServiceTest {
         JsonArray linksObj = jsonReader.readArray();
         jsonReader.close();
 
-        //service.loadTDCConfigurationPaths(config);
+        service.loadTDCConfigurationPaths(config.getDataSet().getDataStore());
+    }
+
+    @Test
+    public void executeMQL() {
+        String linksJson = "{\n" +
+                "  \"select\": \"[Name], [Author], {Security Level}, <Business Rule>, #context#\",\n" +
+                "  \"from\": \"/Configuration/Published\",\n" +
+                "  \"where\": \"{Security Level} != 'Classified' AND (endorsed_by = me OR warned_by NOT EXISTS) AND content='Accounts Payable' AND category = ANY ('Data Modeling') AND semantic_search_text='customer tables' WITHIN ('Name', 'Description') AND label != ALL ('Jon', 'Release candidate')\",\n" +
+                "  \"orderby\": \"Name asc\",\n" +
+                "  \"pageSize\": 10,\n" +
+                "  \"pageNumber\": 1\n" +
+                "}";
+
+        JsonReader jsonReader = Json.createReader(new StringReader(linksJson));
+        JsonObject payload = jsonReader.readObject();
+        jsonReader.close();
+
+        service.executeMQL(config.getDataSet().getDataStore(), payload);
+    }
+
+    @Test
+    public void getCustomAttributesTest(){
+        System.setProperty("http.proxyHost", "127.0.0.1");
+        System.setProperty("https.proxyHost", "127.0.0.1");
+        System.setProperty("http.proxyPort", "8888");
+        System.setProperty("https.proxyPort", "8888");
+
+        service.getCustomAttributes(config.getDataSet());
     }
 
 }
