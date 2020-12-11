@@ -21,7 +21,7 @@ import static org.talend.sdk.component.api.component.Icon.IconType.CUSTOM;
 
 @Version(1) // default version is 1, if some configuration changes happen between 2 versions you can add a migrationHandler
 @Icon(value = CUSTOM, custom = "TDC") // icon is located at src/main/resources/icons/TDCAttributesOutput.svg
-@PartitionMapper(name = "Input", family = "TDC")
+@PartitionMapper(name = "LoginLogout", family = "TDC")
 @Documentation("TODO fill the documentation for this processor")
 public class TDCInput implements Serializable {
     private final TDCInputConfiguration configuration;

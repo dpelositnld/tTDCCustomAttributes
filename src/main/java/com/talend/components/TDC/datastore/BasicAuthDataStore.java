@@ -20,7 +20,9 @@ import org.talend.sdk.component.api.meta.Documentation;
 @GridLayout({
         @GridLayout.Row({ "endpoint" }),
         @GridLayout.Row({ "username" }),
-        @GridLayout.Row({ "password" })
+        @GridLayout.Row({ "password" }),
+        @GridLayout.Row({ "isUseExistingSession" }),
+        @GridLayout.Row({ "token" })
 })
 @Documentation("TODO fill the documentation for this configuration")
 public class BasicAuthDataStore implements Serializable {
@@ -38,4 +40,13 @@ public class BasicAuthDataStore implements Serializable {
     @Credential
     @Documentation("TODO fill the documentation for this parameter")
     private String password;
+
+    @Option
+    @Documentation("TODO fill the documentation for this parameter")
+    private boolean isUseExistingSession = false;
+
+    @Option
+    @ActiveIf(target = "isUseExistingSession", value = "true")
+    @Documentation("TODO fill the documentation for this parameter")
+    private String token;
 }

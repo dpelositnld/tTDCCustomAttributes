@@ -1,11 +1,9 @@
 package com.talend.components.TDC.client;
 
-import org.json.JSONObject;
-import org.talend.sdk.component.api.configuration.ui.DefaultValue;
+import com.talend.components.TDC.datastore.BasicAuthDataStore;
 import org.talend.sdk.component.api.service.http.*;
 
 import javax.json.JsonObject;
-import java.util.HashMap;
 import java.util.Map;
 
 public interface TDCAPIClient extends HttpClient {
@@ -19,6 +17,29 @@ public interface TDCAPIClient extends HttpClient {
     Response<JsonObject> logout(
             @Header("Content-Type") String contentType,
             @Header("api_key") String token
+    );
+
+    @Request(path = "/MM/rest/v1/entities/{objectId}")
+    Response<JsonObject> getEntity(
+            @Header("Content-Type") String contentType,
+            @Header("api_key") String token,
+            @Path("objectId") String objectId,
+            @Query("includeAttributes") boolean includeAttributes
+    );
+
+    @Request(path = "/MM/rest/v1/entities/executeMQLQuery", method = "POST" )
+    @UseConfigurer(TDCRestConfigurer.class)
+    Response<JsonObject> executeMQLQuery(
+            JsonObject payload
+    );
+
+    @Request(path = "/MM/rest/v1/operations/repositoryBrowse", method = "GET" )
+    @UseConfigurer(TDCRestConfigurer.class)
+    Response<JsonObject> repositoryBrowse(
+            @ConfigurerOption("dataStore") BasicAuthDataStore dataStore,
+            @ConfigurerOption("httpClient") TDCAPIClient httpClient,
+            @Query("objectTypes") String objectTypes,
+            @Query("repositoryPath") String repositoryPath
     );
 
     @Request(path = "/MM/rest/v1/repository/setCustomAttributes", method = "PUT")

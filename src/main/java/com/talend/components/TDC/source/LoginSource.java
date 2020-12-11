@@ -1,9 +1,7 @@
 package com.talend.components.TDC.source;
 
-import com.talend.components.TDC.configuration.TDCAttributesInputConfiguration;
 import com.talend.components.TDC.configuration.TDCInputConfiguration;
 import com.talend.components.TDC.service.AuthenticationService;
-import com.talend.components.TDC.service.TDCAttributesService;
 import org.talend.sdk.component.api.input.Producer;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;

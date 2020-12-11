@@ -4,17 +4,20 @@ import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.TDCAttributesOutputConfiguration;
 import com.talend.components.TDC.dataset.TDCAttributesDataSet;
 import com.talend.components.TDC.datastore.BasicAuthDataStore;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.service.Service;
 import org.talend.sdk.component.api.service.http.Response;
-import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
+import org.talend.sdk.component.junit.ServiceInjectionRule;
+import org.talend.sdk.component.junit.SimpleComponentRule;
 import org.talend.sdk.component.junit5.WithComponents;
-import org.talend.sdk.component.runtime.record.RecordImpl;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import java.io.StringReader;
@@ -24,6 +27,13 @@ import java.util.List;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WithComponents("com.talend.components.TDC")
 class TDCAttributesServiceTest {
+    @ClassRule
+    public static final SimpleComponentRule COMPONENT_FACTORY = new
+            SimpleComponentRule("org.talend.components.tdc");
+    @Rule
+    public final ServiceInjectionRule injections = new ServiceInjectionRule
+            (COMPONENT_FACTORY, this);
+
     @Service
     private TDCAttributesService service;
 
@@ -55,7 +65,7 @@ class TDCAttributesServiceTest {
     public void loadCustomAttributesTest() {
         try {
             service.getClient().base(config.getDataSet().getDataStore().getEndpoint());
-            service.loadCustomAttributes(config);
+            service.loadCustomAttributes(config.getDataSet().getDataStore());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -99,6 +109,51 @@ class TDCAttributesServiceTest {
         TDCAPIClient client = service.getClient();
         Response<JsonObject> response = client.setCustomAttributes("application/json", token, object);
         System.out.println(payload);
+    }
+
+    @Test
+    void getConfigurationPathsTest(){
+        List<String> configurationPaths = new ArrayList<String>();
+
+        String path = "";
+        String linksJson = "[\n" +
+                "      {\n" +
+                "        \"objectName\": \"Configuration\",\n" +
+                "        \"objectType\": 157,\n" +
+                "        \"objectTypeName\": \"Folder\",\n" +
+                "        \"id\": \"-1_2\",\n" +
+                "        \"links\": [\n" +
+                "          {\n" +
+                "            \"objectName\": \"Published\",\n" +
+                "            \"objectType\": 168,\n" +
+                "            \"objectTypeName\": \"Configuration\",\n" +
+                "            \"id\": \"-1_3\",\n" +
+                "            \"links\": []\n" +
+                "          }\n" +
+                "        ]\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"objectName\": \"Enterprise Architecture\",\n" +
+                "        \"objectType\": 157,\n" +
+                "        \"objectTypeName\": \"Folder\",\n" +
+                "        \"id\": \"-1_34\",\n" +
+                "        \"links\": [\n" +
+                "          {\n" +
+                "            \"objectName\": \"Enterprise Architecture\",\n" +
+                "            \"objectType\": 168,\n" +
+                "            \"objectTypeName\": \"Configuration\",\n" +
+                "            \"id\": \"-1_35\",\n" +
+                "            \"links\": []\n" +
+                "          }\n" +
+                "        ]\n" +
+                "      }\n" +
+                "    ]";
+
+        JsonReader jsonReader = Json.createReader(new StringReader(linksJson));
+        JsonArray linksObj = jsonReader.readArray();
+        jsonReader.close();
+
+        //service.loadTDCConfigurationPaths(config);
     }
 
 }

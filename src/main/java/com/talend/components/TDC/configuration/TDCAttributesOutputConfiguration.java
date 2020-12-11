@@ -21,7 +21,7 @@ import org.talend.sdk.component.api.meta.Documentation;
 @Data
 @GridLayout({
         @GridLayout.Row({ "dataSet" }),
-        @GridLayout.Row({ "TDCObjectID" }),
+        @GridLayout.Row({ "TDCObjectIDField" }),
         @GridLayout.Row({ "TDCAttributes" })
 })
 @Documentation("TODO fill the documentation for this configuration")
@@ -32,28 +32,16 @@ public class TDCAttributesOutputConfiguration implements Serializable {
 
     @Option
     @Required
-    @Uniques
-    @Documentation("")
-    List<TDCAttribute> TDCAttributes;
-
-    @Option
-    @Required
     @BuiltInSuggestable(value = BuiltInSuggestable.Name.INCOMING_SCHEMA_ENTRY_NAMES)
     @Suggestable(TDCAttributesService.INCOMING_PATHS_DYNAMIC)
     @Documentation("")
-    String TDCObjectID;
-
-    /*
-    @Option
-    @Suggestable(value = "suggestionsProvider", parameters = { "dataset" })
-    @Documentation("")
-    String TDC_ObjectID;
+    String TDCObjectIDField;
 
     @Option
-    @Proposable(value = "valuesProvider")
+    @Required
+    @Uniques
     @Documentation("")
-    String TDC_ObjectID2;
-    */
+    List<TDCAttribute> TDCAttributes;
 
     @Data
     @GridLayout({
@@ -61,12 +49,6 @@ public class TDCAttributesOutputConfiguration implements Serializable {
             @GridLayout.Row({ "attribute" })
     })
     public static class TDCAttribute implements Serializable {
-/*
-        @Option
-        @Proposable("valuesProvider")
-        @Documentation("")
-        public String options1;
-        */
 
         @Option
         @BuiltInSuggestable(value = BuiltInSuggestable.Name.INCOMING_SCHEMA_ENTRY_NAMES)
@@ -76,7 +58,7 @@ public class TDCAttributesOutputConfiguration implements Serializable {
         private String field;
 
         @Option
-        @Suggestable("loadCustomAttributes")
+        @Suggestable(value = "loadChosenAttributes", parameters = { "../../dataSet" })
         @Required
         @Documentation("")
         private String attribute;

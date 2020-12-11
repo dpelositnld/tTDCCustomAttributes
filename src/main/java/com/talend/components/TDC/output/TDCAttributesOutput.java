@@ -2,13 +2,11 @@ package com.talend.components.TDC.output;
 
 import static org.talend.sdk.component.api.component.Icon.IconType.CUSTOM;
 
-import java.io.*;
-import java.util.*;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import com.talend.components.TDC.configuration.TDCAttributesOutputConfiguration;
+import com.talend.components.TDC.service.TDCAttributesService;
 import org.talend.sdk.component.api.component.Icon;
 import org.talend.sdk.component.api.component.Version;
 import org.talend.sdk.component.api.configuration.Option;
@@ -20,30 +18,27 @@ import org.talend.sdk.component.api.processor.Input;
 import org.talend.sdk.component.api.processor.Processor;
 import org.talend.sdk.component.api.record.Record;
 
-import com.talend.components.TDC.service.TDCAttributesService;
-import org.talend.sdk.component.api.record.Schema;
+import java.io.Serializable;
 
 @Version(1) // default version is 1, if some configuration changes happen between 2 versions you can add a migrationHandler
 @Icon(value = CUSTOM, custom = "TDCAttributesOutput") // icon is located at src/main/resources/icons/TDCAttributesOutput.svg
 @Processor(name = "Output", family = "TDC")
 @Documentation("TODO fill the documentation for this processor")
 public class TDCAttributesOutput implements Serializable {
-    private final TDCAttributesOutputConfiguration configuration;
+    private final TDCAttributesOutputConfiguration config;
     private final TDCAttributesService service;
 
-    List<TDCAttributesOutputConfiguration.TDCAttribute> TDCAttributes;
-
     public TDCAttributesOutput(@Option("customAttributesConfiguration")
-                                  final TDCAttributesOutputConfiguration configuration,
+                                  final TDCAttributesOutputConfiguration config,
                                final TDCAttributesService service) {
 
-        this.configuration = configuration;
+        this.config = config;
         this.service = service;
     }
 
     @PostConstruct
     public void init() {
-        service.getClient().base(configuration.getDataSet().getDataStore().getEndpoint());
+        service.getClient().base(config.getDataSet().getDataStore().getEndpoint());
     }
 
     @BeforeGroup
@@ -58,14 +53,15 @@ public class TDCAttributesOutput implements Serializable {
             @Input final Record record) {
 
         service.setAttributes(
-                configuration.getDataSet().isUseExistingSession(),
-                configuration.getDataSet().getDataStore().getUsername(),
-                configuration.getDataSet().getDataStore().getPassword(),
-                configuration.getDataSet().getToken(),
+                config.getDataSet().getDataStore().isUseExistingSession(),
+                config.getDataSet().getDataStore().getUsername(),
+                config.getDataSet().getDataStore().getPassword(),
+                config.getDataSet().getDataStore().getToken(),
                 record,
-                configuration.getTDCObjectID(),
-                configuration.getTDCAttributes()
+                config.getTDCObjectIDField(),
+                config.getTDCAttributes()
                 );
+
     }
 
     @AfterGroup
