@@ -21,17 +21,24 @@ import org.talend.sdk.component.api.service.completion.Values;
 import org.talend.sdk.component.api.service.http.Response;
 
 import javax.json.*;
-import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.net.HttpCookie;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Slf4j
 @Data
 @Service
 public class TDCAttributesService {
     public static final String INCOMING_PATHS_DYNAMIC = "INCOMING_PATHS_DYNAMIC";
+
+    public TDCAttributesService(){
+        System.setProperty("http.proxyHost","host.docker.internal");
+        System.setProperty("https.proxyHost","host.docker.internal");
+        System.setProperty("http.proxyPort","8888");
+        System.setProperty("https.proxyPort","8888");
+    }
 
     @Service
     TDCAPIClient client;
@@ -89,9 +96,28 @@ public class TDCAttributesService {
         return responseBody;
     }
 
-    @Suggestions("loadCustomAttributes")
-    public SuggestionValues loadCustomAttributes(@Option final BasicAuthDataStore dataStore) {
+    @Suggestions("loadAttributes")
+    public SuggestionValues loadAttributes(@Option final BasicAuthDataStore dataStore) {
         SuggestionValues values = new SuggestionValues();
+
+        List<SuggestionValues.Item> customAttributes = getCustomAttributes(dataStore);
+        values.setItems(customAttributes);
+
+        List<SuggestionValues.Item> systemAttributes = getSystemAttributes();
+        values.getItems().addAll(systemAttributes);
+
+        return values;
+    }
+
+    private List<SuggestionValues.Item> getSystemAttributes(){
+        List<SuggestionValues.Item> items = new ArrayList<>();
+        List<AttributeName> attributes = Arrays.asList(AttributeName.values());
+        for (AttributeName attr: attributes)
+            items.add(new SuggestionValues.Item("#" + attr.getAttributeName() + "#", attr.getAttributeName() + " - SYSTEM ATTRIBUTE"));
+        return items;
+    }
+
+    private List<SuggestionValues.Item> getCustomAttributes(BasicAuthDataStore dataStore){
         List<SuggestionValues.Item> items = new ArrayList<SuggestionValues.Item>();
 
         String username = dataStore.getUsername();
@@ -104,11 +130,9 @@ public class TDCAttributesService {
         JSONArray responseObject = getCustomAttributesResponse(username, password, encodedPassword);
         for (int i=0; i < responseObject.length(); i++) {
             JSONObject attrJson = (JSONObject) responseObject.get(i);
-            items.add(new SuggestionValues.Item(attrJson.getString("name"), attrJson.getString("name")));
+            items.add(new SuggestionValues.Item("{"+ attrJson.getString("name") + "}", attrJson.getString("name") + " - CUSTOM ATTRIBUTE"));
         }
-        values.setItems(items);
-
-        return values;
+        return items;
     }
 
     @Suggestions("loadChosenAttributes")
@@ -117,7 +141,7 @@ public class TDCAttributesService {
         List<SuggestionValues.Item> items = new ArrayList<SuggestionValues.Item>();
 
         for (String attr: dataset.getAttributes()) {
-            items.add(new SuggestionValues.Item(attr, attr));
+            items.add(new SuggestionValues.Item(attr.substring(1, attr.length()-1), attr.substring(1, attr.length()-1)));
         }
 
         values.setItems(items);
@@ -183,16 +207,13 @@ public class TDCAttributesService {
         JsonObject responseBody;
         client.base(dataStore.getEndpoint());
 
-        System.setProperty("http.proxyHost","host.docker.internal");
-        System.setProperty("https.proxyHost","host.docker.internal");
-        System.setProperty("http.proxyPort","8888");
-        System.setProperty("https.proxyPort","8888");
-
         String token = "";
         if (!dataStore.isUseExistingSession())
             token = authService.getToken(dataStore.getUsername(), dataStore.getPassword());
         else
             token = dataStore.getToken();
+
+        System.out.println("********" + MQLPayload.toString());
 
         Response<JsonObject> response = client.executeMQLQuery("application/json", token, MQLPayload);
 
@@ -215,13 +236,12 @@ public class TDCAttributesService {
         String fromClause = dataSet.getConfigurationPath();
         String whereClause = "";
 
-        selectClause += "#Name#, #Object Stable Id#";
         for (String attr: dataSet.getAttributes()) {
             selectClause = !selectClause.isEmpty()? selectClause + ",": selectClause;
-            selectClause += "{" + attr + "}";
+            selectClause += attr;
 
             whereClause = !whereClause.isEmpty()? whereClause + " OR ": whereClause;
-            whereClause += "{" + attr + "} exists";
+            whereClause += attr + " exists";
         }
 
         jsonPayload = builder
@@ -231,8 +251,6 @@ public class TDCAttributesService {
                 .add("pageSize", pageSize)
                 .add("pageNumber", pageNumber)
                 .build();
-
-        System.out.println(jsonPayload.toString());
 
         return jsonPayload;
     }
@@ -348,5 +366,65 @@ public class TDCAttributesService {
         }
 
         throw new RuntimeException(response.error(String.class));
+    }
+
+    public enum AttributeName {
+        BUSINESS_DESCRIPTION("Business Description"),
+        BUSINESS_DESCRIPTION_INFERRED("Business Description Inferred"),
+        BUSINESS_DESCRIPTION_INFERRED_ORIGIN("Business Description Inferred Origin"),
+        BUSINESS_NAME("Business Name"),
+        BUSINESS_NAME_INFERRED("Business Name Inferred"),
+        BUSINESS_NAME_INFERRED_ORIGIN("Business Name Inferred Origin"),
+        CERTIFICATIONS("Certifications"),
+        CERTIFIED("Certified"),
+        CHILDREN("Children"),
+        COLLECTIONS("Collections"),
+        COLUMN_HISTOGRAM("Column Histogram"),
+        COLUMN_STATISTICS("Column Statistics"),
+        COMMENT_COUNT("Comment Count"),
+        COMMENTS("Comments"),
+        CONTENT_DESCRIPTION("Content Description"),
+        CONTENT_NAME("Content Name"),
+        CONTEXT("Context"),
+        DATA_TYPE("Data Type"),
+        DESCRIPTION("Description"),
+        ENDORSEMENT_COUNT("Endorsement Count"),
+        ENDORSEMENTS("Endorsements"),
+        EXTERNAL_URL("External Url"),
+        HIDE_DATA("Hide Data"),
+        LABELS("Labels"),
+        LAST_MODIFIED_DATE("Last Modified Date"),
+        MODEL_ID("Model Id"),
+        NAME("Name"),
+        NATIVE_ID("Native Id"),
+        OBJECT_ID("Object Id"),
+        OBJECT_PROFILE("Object Profile"),
+        OBJECT_STABLE_ID("Object Stable Id"),
+        OBJECT_SYSTEM_TYPE("Object System Type"),
+        OBJECT_TYPE("Object Type"),
+        OBJECT_TYPE_ID("Object Type Id"),
+        PARENT("Parent"),
+        PHYSICAL_NAME("Physical Name"),
+        SEMANTIC_TYPES("Semantic Types"),
+        STEWARDS("Stewards"),
+        TERM("Term"),
+        USED("Used"),
+        WARNING_COUNT("Warning Count"),
+        WARNINGS("Warnings"),
+        WORKFLOW_ACTIONS("Workflow Actions");
+
+        public String getAttributeName() {
+            return attributeName;
+        }
+
+        private String attributeName;
+
+        AttributeName(String attributeName) {
+            this.attributeName = attributeName;
+        }
+
+        public static Stream<AttributeName> stream() {
+            return Stream.of(AttributeName.values());
+        }
     }
 }

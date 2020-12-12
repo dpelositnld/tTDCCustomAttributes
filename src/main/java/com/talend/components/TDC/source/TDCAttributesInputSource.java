@@ -55,8 +55,8 @@ public class TDCAttributesInputSource implements Serializable {
                 JsonObject attribute = it.next().asJsonObject();
                 JsonObject attrTypeJson = attribute.getJsonObject("attributeType");
                 String attr = attrTypeJson.getString("name");
-                String value = attribute.getString("value");
-                builder.withString(attr, value);
+                JsonValue value = attribute.get("value");
+                builder.withString(attr, value.toString());
             }
 
             record = builder.build();

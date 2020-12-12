@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.service.Service;
+import org.talend.sdk.component.api.service.completion.SuggestionValues;
 import org.talend.sdk.component.api.service.http.Response;
 import org.talend.sdk.component.junit.ServiceInjectionRule;
 import org.talend.sdk.component.junit.SimpleComponentRule;
@@ -60,9 +61,9 @@ class TDCAttributesServiceTest {
         ds.getDataStore().setPassword("Administrator");
 
         List<String> attributes = new ArrayList<>();
-        attributes.add("CustomAttribute1");
-        attributes.add("CustomAttribute2");
-        attributes.add("CustomAttribute3");
+        attributes.add("{CustomAttribute1}");
+        attributes.add("{CustomAttribute2}");
+        attributes.add("{CustomAttribute3}");
         ds.setAttributes(attributes);
 
         ds.setConfigurationPath("/Configuration/Published");
@@ -71,10 +72,14 @@ class TDCAttributesServiceTest {
     }
 
     @Test
-    public void loadCustomAttributesTest() {
+    public void loadAttributesTest() {
         try {
             service.getClient().base(config.getDataSet().getDataStore().getEndpoint());
-            service.loadCustomAttributes(config.getDataSet().getDataStore());
+            SuggestionValues values = service.loadAttributes(config.getDataSet().getDataStore());
+            for (SuggestionValues.Item item: values.getItems()){
+                System.out.println("id: " + item.getId() + " - label: " + item.getLabel());
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -167,20 +172,15 @@ class TDCAttributesServiceTest {
 
     @Test
     public void executeMQL() {
-        String linksJson = "{\n" +
-                "  \"select\": \"[Name], [Author], {Security Level}, <Business Rule>, #context#\",\n" +
-                "  \"from\": \"/Configuration/Published\",\n" +
-                "  \"where\": \"{Security Level} != 'Classified' AND (endorsed_by = me OR warned_by NOT EXISTS) AND content='Accounts Payable' AND category = ANY ('Data Modeling') AND semantic_search_text='customer tables' WITHIN ('Name', 'Description') AND label != ALL ('Jon', 'Release candidate')\",\n" +
-                "  \"orderby\": \"Name asc\",\n" +
-                "  \"pageSize\": 10,\n" +
-                "  \"pageNumber\": 1\n" +
-                "}";
+        String MQL = "{\"select\":\"{CustomAttribute1},{CustomAttribute2},{CustomAttribute3}\",\"from\":\"/Configuration/Published\",\"where\":\"{CustomAttribute1} exists OR {CustomAttribute2} exists OR {CustomAttribute3} exists\",\"pageSize\":100,\"pageNumber\":1}";
 
-        JsonReader jsonReader = Json.createReader(new StringReader(linksJson));
+        JsonReader jsonReader = Json.createReader(new StringReader(MQL));
         JsonObject payload = jsonReader.readObject();
         jsonReader.close();
 
-        service.executeMQL(config.getDataSet().getDataStore(), payload);
+        JsonObject result = service.executeMQL(config.getDataSet().getDataStore(), payload);
+        //result.getJsonObject("result");
+
     }
 
     @Test

@@ -35,7 +35,7 @@ public class TDCAttributesDataSet implements Serializable {
     private String configurationPath;
 
     @Option
-    @Suggestable(value = "loadCustomAttributes", parameters = { "dataStore" })
+    @Suggestable(value = "loadAttributes", parameters = { "dataStore" })
     @Required
     @Documentation("")
     private List<String> attributes;
