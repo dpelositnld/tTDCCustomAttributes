@@ -21,6 +21,7 @@ import org.talend.sdk.component.api.service.completion.Values;
 import org.talend.sdk.component.api.service.http.Response;
 
 import javax.json.*;
+import java.io.StringReader;
 import java.net.HttpCookie;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -84,7 +85,7 @@ public class TDCAttributesService {
 
         JsonObject payload = buildSetAttributesTDCRestBody(record, TDCObjectID, TDCAttributes);
 
-        final Response<JsonObject> response = client.setCustomAttributes("application/json", token, payload);
+        final Response<JsonObject> response = client.setAttributes("application/json", token, payload);
         if (response.status() == 200) {
             responseBody = response.body();
         } else
@@ -96,6 +97,7 @@ public class TDCAttributesService {
         return responseBody;
     }
 
+    /*
     @Suggestions("loadAttributes")
     public SuggestionValues loadAttributes(@Option final BasicAuthDataStore dataStore) {
         SuggestionValues values = new SuggestionValues();
@@ -109,7 +111,85 @@ public class TDCAttributesService {
         return values;
     }
 
-    private List<SuggestionValues.Item> getSystemAttributes(){
+     */
+
+    @Suggestions("loadAttributes")
+    public SuggestionValues loadAttributes(@Option final BasicAuthDataStore dataStore, @Option final String queryConfiguratorType, @Option final List<String> profiles) {
+        SuggestionValues values = new SuggestionValues();
+        List<SuggestionValues.Item> attributes;
+
+        if (queryConfiguratorType.equals("SIMPLE"))
+            attributes = getPredefinedAttributes(dataStore, profiles);
+        else
+            attributes = getProfilesAttributes(dataStore, profiles);
+
+        values.setItems(attributes);
+        return values;
+    }
+
+    private List<SuggestionValues.Item> getPredefinedAttributes(BasicAuthDataStore dataStore, List<String> profiles) {
+        List<SuggestionValues.Item> suggestions = new ArrayList<>();
+        List<SuggestionValues.Item> customAttributes = getCustomAttributes(dataStore);
+        List<SuggestionValues.Item> mostUsedAttributes = getCommonAttributes();
+        suggestions.addAll(customAttributes);
+        suggestions.addAll(mostUsedAttributes);
+        return suggestions;
+    }
+
+    private List<SuggestionValues.Item> getProfilesAttributes(BasicAuthDataStore dataStore, List<String> profiles) {
+        List<SuggestionValues.Item> suggestions = new ArrayList<>();
+
+        JsonObject responseBody;
+
+        client.base(dataStore.getEndpoint());
+
+        String token = "";
+        if (!dataStore.isUseExistingSession())
+            token = authService.getToken(dataStore.getUsername(), dataStore.getPassword());
+        else
+            token = dataStore.getToken();
+
+        Set<JsonObject> attributeSet = new HashSet<>();
+        for (String profileName: profiles) {
+            Response<JsonObject> response = client.listEntityTypes("application/json", token, true, profileName);
+
+            if (response.status() == 200)
+                responseBody = response.body();
+            else
+                throw new RuntimeException(response.error(String.class));
+
+            JsonArray result = responseBody.getJsonArray("result");
+            for (int i = 0; i < result.size(); i++){
+                JsonArray entityTypes = result.getJsonObject(i).getJsonArray("entityTypes");
+                for (int j = 0; j < entityTypes.size(); j++) {
+                    JsonArray attributeTypes = entityTypes.getJsonObject(j).getJsonArray("attributeTypes");
+                    for (int z = 0; z < attributeTypes.size(); z++) {
+                        JsonObject attributeType = attributeTypes.getJsonObject(z);
+                        attributeSet.add(attributeType);
+                    }
+                }
+            }
+        }
+
+        for (JsonObject attrJson: attributeSet){
+            SuggestionValues.Item item = new SuggestionValues.Item();
+            String type = attrJson.getString("type");
+            String prefixChar = type.equals("CUSTOM_ATTRIBUTE")? "{": "#";
+            String suffixType = type.equals("CUSTOM_ATTRIBUTE")? "}": "#";
+            String id = prefixChar + attrJson.getString("name") + suffixType;
+            String label = attrJson.getString("displayName") + " - " + attrJson.getString("type");
+            item.setId(id);
+            item.setLabel(label);
+            suggestions.add(item);
+        }
+
+        if (!dataStore.isUseExistingSession())
+            authService.logout(token);
+
+        return suggestions;
+    }
+
+    private List<SuggestionValues.Item> getCommonAttributes(){
         List<SuggestionValues.Item> items = new ArrayList<>();
         List<AttributeName> attributes = Arrays.asList(AttributeName.values());
         for (AttributeName attr: attributes)
@@ -140,7 +220,7 @@ public class TDCAttributesService {
         SuggestionValues values = new SuggestionValues();
         List<SuggestionValues.Item> items = new ArrayList<SuggestionValues.Item>();
 
-        for (String attr: dataset.getAttributes()) {
+        for (String attr: dataset.getQueryBuilder().getAttributes()) {
             items.add(new SuggestionValues.Item(attr.substring(1, attr.length()-1), attr.substring(1, attr.length()-1)));
         }
 
@@ -173,6 +253,50 @@ public class TDCAttributesService {
         return values;
     }
 
+    @Suggestions("loadTDCCategories")
+    public SuggestionValues loadTDCCategories(@Option final BasicAuthDataStore dataStore) {
+        SuggestionValues values = new SuggestionValues();
+        List<SuggestionValues.Item> items = new ArrayList<SuggestionValues.Item>();
+
+        JsonObject responseBody = listCategories(dataStore);
+
+        JsonArray resultJson = responseBody.getJsonArray("result");
+
+        for (int i = 0; i < resultJson.size(); i++) {
+            String cat = resultJson.getString(i);
+            items.add(new SuggestionValues.Item(cat, cat));
+        }
+        values.setItems(items);
+
+        return values;
+    }
+
+    @Suggestions("loadTDCProfiles")
+    public SuggestionValues loadTDCProfiles(@Option final BasicAuthDataStore dataStore) {
+        SuggestionValues values = new SuggestionValues();
+        List<SuggestionValues.Item> items = new ArrayList<SuggestionValues.Item>();
+
+        JsonObject responseBody = listProfiles(dataStore);
+
+        JsonArray resultJson = responseBody.getJsonArray("result");
+
+        for (int i = 0; i < resultJson.size(); i++) {
+            String cat = resultJson.getString(i);
+            items.add(new SuggestionValues.Item(cat, cat));
+        }
+        values.setItems(items);
+
+        return values;
+    }
+
+    @DynamicValues("loadMQLQueryConfiguratorTypes")
+    public Values loadMQLQueryConfiguratorTypes() {
+        return new Values(Arrays
+                .asList(new Values.Item("SIMPLE", "Simple Configurator"),
+                        new Values.Item("ADVANCED", "Advanced Configurator"),
+                        new Values.Item("CUSTOM", "Custom MQL Editor")));
+    }
+
     private JsonObject repositoryBrowse(BasicAuthDataStore dataStore, String TDCRepositoryPath, String TDCObjectTypes){
         JsonObject responseBody;
         client.base(dataStore.getEndpoint());
@@ -196,10 +320,67 @@ public class TDCAttributesService {
         return responseBody;
     }
 
-    public JsonObject getCustomAttributes(TDCAttributesDataSet dataSet){
-        int pageSize = 100;
+    private JsonObject listCategories(BasicAuthDataStore dataStore){
+        JsonObject responseBody;
+        client.base(dataStore.getEndpoint());
+
+        String token = "";
+        if (!dataStore.isUseExistingSession())
+            token = authService.getToken(dataStore.getUsername(), dataStore.getPassword());
+        else
+            token = dataStore.getToken();
+
+        Response<JsonObject> response = client.listCategoriess("application/json", token);
+
+        if (response.status() == 200)
+            responseBody = response.body();
+        else
+            throw new RuntimeException(response.error(String.class));
+
+        if (!dataStore.isUseExistingSession())
+            authService.logout(token);
+
+        return responseBody;
+    }
+
+    private JsonObject listProfiles(BasicAuthDataStore dataStore){
+        JsonObject responseBody;
+        client.base(dataStore.getEndpoint());
+
+        String token = "";
+        if (!dataStore.isUseExistingSession())
+            token = authService.getToken(dataStore.getUsername(), dataStore.getPassword());
+        else
+            token = dataStore.getToken();
+
+        Response<JsonObject> response = client.listProfiles("application/json", token);
+
+        if (response.status() == 200)
+            responseBody = response.body();
+        else
+            throw new RuntimeException(response.error(String.class));
+
+        if (!dataStore.isUseExistingSession())
+            authService.logout(token);
+
+        return responseBody;
+    }
+
+
+    public JsonObject getAttributes(TDCAttributesDataSet dataSet){
+        int pageSize = dataSet.getNumOfRecords();
         int pageNumber = 1;
-        JsonObject MQLQuery = buildExecuteMQLPayload(dataSet, pageSize, pageNumber);
+        JsonObject MQLQuery;
+
+        if (!dataSet.getQueryConfiguratorType().equals("CUSTOM"))
+            MQLQuery = buildExecuteMQLPayload(dataSet, pageSize, pageNumber);
+        else {
+            String mql = dataSet.getQueryEditor().getMQL();
+            JsonReader jsonReader = Json.createReader(new StringReader(mql));
+            MQLQuery = jsonReader.readObject();
+            jsonReader.close();
+        }
+
         return executeMQL(dataSet.getDataStore(), MQLQuery);
     }
 
@@ -233,16 +414,23 @@ public class TDCAttributesService {
         JsonObjectBuilder builder = Json.createObjectBuilder();
 
         String selectClause = "";
-        String fromClause = dataSet.getConfigurationPath();
+        String fromClause = dataSet.getQueryBuilder().getConfigurationPath();
         String whereClause = "";
 
-        for (String attr: dataSet.getAttributes()) {
+        for (String attr: dataSet.getQueryBuilder().getAttributes()) {
             selectClause = !selectClause.isEmpty()? selectClause + ",": selectClause;
             selectClause += attr;
 
-            whereClause = !whereClause.isEmpty()? whereClause + " OR ": whereClause;
-            whereClause += attr + " exists";
+            //whereClause = !whereClause.isEmpty()? whereClause + " OR ": whereClause;
+            //whereClause += attr + " exists";
         }
+
+        String catList = "";
+        for (String cat: dataSet.getQueryBuilder().getCategories()){
+            catList = !catList.isEmpty()? catList + ",": catList;
+            catList += "'" + cat + "'";
+        }
+        whereClause += "category=ANY("+ catList + ")";
 
         jsonPayload = builder
                 .add("select", selectClause)

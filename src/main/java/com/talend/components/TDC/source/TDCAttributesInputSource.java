@@ -39,7 +39,7 @@ public class TDCAttributesInputSource implements Serializable {
 
     @PostConstruct
     public void init(){
-        JsonObject response = service.getCustomAttributes(config.getDataSet());
+        JsonObject response = service.getAttributes(config.getDataSet());
         System.out.println(response.toString());
         MQLRecords = response.getJsonArray("result");
     }

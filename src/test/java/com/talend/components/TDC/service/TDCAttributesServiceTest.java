@@ -60,13 +60,27 @@ class TDCAttributesServiceTest {
         ds.getDataStore().setUsername("Administrator");
         ds.getDataStore().setPassword("Administrator");
 
+        ds.setQueryConfiguratorType("CUSTOM");
+
+        List<String> categories = new ArrayList<>();
+        categories.add("Dataset");
+        categories.add("File");
+        ds.getQueryBuilder().setCategories(categories);
+
         List<String> attributes = new ArrayList<>();
         attributes.add("{CustomAttribute1}");
         attributes.add("{CustomAttribute2}");
         attributes.add("{CustomAttribute3}");
-        ds.setAttributes(attributes);
+        ds.getQueryBuilder().setAttributes(attributes);
 
-        ds.setConfigurationPath("/Configuration/Published");
+        List<String> profiles = new ArrayList<>();
+        profiles.add("File System (File)");
+        profiles.add("RDBMS Relational Database (Database)");
+        ds.getQueryBuilder().setProfiles(profiles);
+
+        ds.getQueryBuilder().setConfigurationPath("/Configuration/Published");
+
+        ds.getQueryEditor().setMQL("{\"select\":\"{CustomAttribute1},{CustomAttribute2},{CustomAttribute3}\",\"from\":\"/Configuration/Published\",\"where\":\"category=ANY('Dataset','File')\",\"pageSize\":100,\"pageNumber\":1}");
 
         config.setDataSet(ds);
     }
@@ -74,8 +88,10 @@ class TDCAttributesServiceTest {
     @Test
     public void loadAttributesTest() {
         try {
+            config.getDataSet().setQueryConfiguratorType("SIMPLE");
+
             service.getClient().base(config.getDataSet().getDataStore().getEndpoint());
-            SuggestionValues values = service.loadAttributes(config.getDataSet().getDataStore());
+            SuggestionValues values = service.loadAttributes(config.getDataSet().getDataStore(), config.getDataSet().getQueryConfiguratorType(), config.getDataSet().getQueryBuilder().getProfiles());
             for (SuggestionValues.Item item: values.getItems()){
                 System.out.println("id: " + item.getId() + " - label: " + item.getLabel());
             }
@@ -121,7 +137,7 @@ class TDCAttributesServiceTest {
         jsonReader.close();
 
         TDCAPIClient client = service.getClient();
-        Response<JsonObject> response = client.setCustomAttributes("application/json", token, object);
+        Response<JsonObject> response = client.setAttributes("application/json", token, object);
         System.out.println(payload);
     }
 
@@ -171,7 +187,7 @@ class TDCAttributesServiceTest {
     }
 
     @Test
-    public void executeMQL() {
+    public void executeMQLTest() {
         String MQL = "{\"select\":\"{CustomAttribute1},{CustomAttribute2},{CustomAttribute3}\",\"from\":\"/Configuration/Published\",\"where\":\"{CustomAttribute1} exists OR {CustomAttribute2} exists OR {CustomAttribute3} exists\",\"pageSize\":100,\"pageNumber\":1}";
 
         JsonReader jsonReader = Json.createReader(new StringReader(MQL));
@@ -184,13 +200,18 @@ class TDCAttributesServiceTest {
     }
 
     @Test
-    public void getCustomAttributesTest(){
-        System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("https.proxyHost", "127.0.0.1");
-        System.setProperty("http.proxyPort", "8888");
-        System.setProperty("https.proxyPort", "8888");
+    public void getAttributesTest(){
+        service.getAttributes(config.getDataSet());
+    }
 
-        service.getCustomAttributes(config.getDataSet());
+    @Test
+    public void loadCategoriesTest(){
+        service.loadTDCCategories(config.getDataSet().getDataStore());
+    }
+
+    @Test
+    public void loadProfilesTest(){
+        service.loadTDCProfiles(config.getDataSet().getDataStore());
     }
 
 }

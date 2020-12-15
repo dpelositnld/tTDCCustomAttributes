@@ -42,8 +42,8 @@ public interface TDCAPIClient extends HttpClient {
             @Query("repositoryPath") String repositoryPath
     );
 
-    @Request(path = "/MM/rest/v1/repository/setCustomAttributes", method = "PUT")
-    Response<JsonObject> setCustomAttributes(
+    @Request(path = "/MM/rest/v1/repository/setAttributes", method = "PUT")
+    Response<JsonObject> setAttributes(
             @Header("Content-Type") String contentType,
             @Header("api_key") String token,
             JsonObject payload
@@ -60,5 +60,29 @@ public interface TDCAPIClient extends HttpClient {
             @Header("Content-Type") String contentType,
             @Header("Cookie") String cookie
     );
+
+    @Request(path = "/MM/rest/v1/types/listCategories", method = "GET")
+    Response<JsonObject> listCategoriess(
+            @Header("accept") String contentType,
+            @Header("api_key") String token
+    );
+
+    @Request(path = "/MM/rest/v1/types/listProfiles", method = "GET")
+    Response<JsonObject> listProfiles(
+            @Header("accept") String contentType,
+            @Header("api_key") String token
+    );
+
+    @Request(path = "/MM/rest/v1/types/listEntityTypes", method = "GET")
+    Response<JsonObject> listEntityTypes(
+            @Header("accept") String contentType,
+            @Header("api_key") String token,
+            @Query("includeAttributes") boolean includeAttributes,
+            @Query("profileName") String profileName
+    );
+
+
+
+
 
 }
