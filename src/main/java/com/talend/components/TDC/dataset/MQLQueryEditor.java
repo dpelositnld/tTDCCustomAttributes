@@ -18,6 +18,7 @@ import java.io.Serializable;
 })
 public class MQLQueryEditor implements Serializable {
     @Option
+    @ActiveIf(target = "../../queryConfiguratorType", value = "CUSTOM")
     @TextArea
     @Required
     @DefaultValue("{}")

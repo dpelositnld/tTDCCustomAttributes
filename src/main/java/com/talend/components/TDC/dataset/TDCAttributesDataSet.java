@@ -12,6 +12,7 @@ import org.talend.sdk.component.api.configuration.condition.ActiveIfs;
 import org.talend.sdk.component.api.configuration.constraint.Required;
 import org.talend.sdk.component.api.configuration.constraint.Uniques;
 import org.talend.sdk.component.api.configuration.type.DataSet;
+import org.talend.sdk.component.api.configuration.ui.DefaultValue;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.configuration.ui.widget.TextArea;
 import org.talend.sdk.component.api.meta.Documentation;
@@ -41,22 +42,23 @@ public class TDCAttributesDataSet implements Serializable {
     @Documentation("TODO fill the documentation for this parameter")
     @Proposable("loadMQLQueryConfiguratorTypes")
     @Required
+    @DefaultValue("SIMPLE")
     private String queryConfiguratorType;
 
     @Option
-    @ActiveIfs(operator = ActiveIfs.Operator.OR, value = {
-            @ActiveIf(target = "queryConfiguratorType", value = "SIMPLE"),
-            @ActiveIf(target = "queryConfiguratorType", value = "ADVANCED")
-    })
+    //Note: ActiveIfs added in the Object fields only as a workaround to Duplicate Key error
+    //@ActiveIf(target = "queryConfiguratorType", value = "CUSTOM", negate = true)
     @Documentation("TODO fill the documentation for this parameter")
     private MQLQueryBuilder queryBuilder = new MQLQueryBuilder();
 
     @Option
-    @ActiveIf(target = "queryConfiguratorType", value = "CUSTOM")
+    //Note: ActiveIfs added in the Object fields only as a workaround to Duplicate Key error
+    //@ActiveIf(target = "queryConfiguratorType", value = "CUSTOM")
     @Documentation("TODO fill the documentation for this parameter")
     private MQLQueryEditor queryEditor = new MQLQueryEditor();
 
     @Option
     @Documentation("TODO fill the documentation for this parameter")
+    @Required
     private int numOfRecords = 1000;
 }

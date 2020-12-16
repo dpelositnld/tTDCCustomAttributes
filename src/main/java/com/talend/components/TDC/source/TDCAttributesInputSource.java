@@ -54,7 +54,7 @@ public class TDCAttributesInputSource implements Serializable {
             for (ListIterator<JsonValue> it = MQLRecord.listIterator(); it.hasNext(); ) {
                 JsonObject attribute = it.next().asJsonObject();
                 JsonObject attrTypeJson = attribute.getJsonObject("attributeType");
-                String attr = attrTypeJson.getString("name");
+                String attr = attrTypeJson.getString("displayName");
                 JsonValue value = attribute.get("value");
                 builder.withString(attr, value.toString());
             }
