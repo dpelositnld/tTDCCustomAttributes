@@ -22,7 +22,7 @@ import java.io.Serializable;
 
 @Version(1) // default version is 1, if some configuration changes happen between 2 versions you can add a migrationHandler
 @Icon(value = CUSTOM, custom = "TDCAttributesOutput") // icon is located at src/main/resources/icons/TDCAttributesOutput.svg
-@Processor(name = "Output", family = "TDC")
+@Processor(name = "AttributesOutput", family = "TDC")
 @Documentation("TODO fill the documentation for this processor")
 public class TDCAttributesOutput implements Serializable {
     private final TDCAttributesOutputConfiguration config;
