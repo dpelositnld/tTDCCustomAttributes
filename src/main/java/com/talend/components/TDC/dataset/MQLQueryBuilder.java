@@ -37,7 +37,7 @@ public class MQLQueryBuilder implements Serializable {
     //FIXME: @Required create an issue with Lists if there is an ActiveIf and it is not active (it is not possible to set a default value)
     //@Required
     @Documentation("TODO fill the documentation for this parameter")
-    private List<String> profiles  = Collections.emptyList();
+    private List<String> profiles;
 
     @Option
     @ActiveIf(target = "../../queryConfiguratorType", value = {"SIMPLE,","ADVANCED"})
@@ -45,13 +45,15 @@ public class MQLQueryBuilder implements Serializable {
     //FIXME: @Required create an issue with Lists if there is an ActiveIf and it is not active (it is not possible to set a default value)
     //@Required
     @Documentation("")
-    private List<String> attributes = Collections.emptyList();
+    private List<String> attributes;
 
     @Option
     @ActiveIf(target = "../../queryConfiguratorType", value = {"SIMPLE,","ADVANCED"})
-    @Documentation("TODO fill the documentation for this parameter")
     @Suggestable(value = "loadTDCCategories", parameters = { "../../dataStore" })
     //FIXME: @Required create an issue with Lists if there is an ActiveIf and it is not active (it is not possible to set a default value)
     //@Required
-    private List<String> categories = Collections.emptyList();
+    @Documentation("TODO fill the documentation for this parameter")
+    private List<String> categories;
+
+
 }

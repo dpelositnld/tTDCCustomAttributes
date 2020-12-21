@@ -2,6 +2,8 @@ package com.talend.components.TDC.service;
 
 import com.talend.components.TDC.client.TDCAPIClient;
 import com.talend.components.TDC.configuration.TDCAttributesOutputConfiguration;
+import com.talend.components.TDC.dataset.MQLQueryBuilder;
+import com.talend.components.TDC.dataset.MQLQueryEditor;
 import com.talend.components.TDC.dataset.TDCAttributesDataSet;
 import com.talend.components.TDC.datastore.BasicAuthDataStore;
 import lombok.Data;
@@ -19,6 +21,7 @@ import org.talend.sdk.component.api.service.completion.SuggestionValues;
 import org.talend.sdk.component.api.service.completion.Suggestions;
 import org.talend.sdk.component.api.service.completion.Values;
 import org.talend.sdk.component.api.service.http.Response;
+import org.talend.sdk.component.api.service.update.Update;
 
 import javax.json.*;
 import java.io.StringReader;
@@ -271,6 +274,27 @@ public class TDCAttributesService {
         return values;
     }
 
+    /*
+    @DynamicValues("loadTDCCategoriesTest")
+    public Values loadTDCCategoriesTest(@Option final BasicAuthDataStore dataStore) {
+        Values values = new Values();
+        List<Values.Item> items = new ArrayList<Values.Item>();
+
+        JsonObject responseBody = listCategories(dataStore);
+
+        JsonArray resultJson = responseBody.getJsonArray("result");
+
+        for (int i = 0; i < resultJson.size(); i++) {
+            String cat = resultJson.getString(i);
+            items.add(new Values.Item(cat, cat));
+        }
+        values.setItems(items);
+
+        return values;
+    }
+    */
+
+
     @Suggestions("loadTDCProfiles")
     public SuggestionValues loadTDCProfiles(@Option final BasicAuthDataStore dataStore) {
         SuggestionValues values = new SuggestionValues();
@@ -295,6 +319,13 @@ public class TDCAttributesService {
                 .asList(new Values.Item("SIMPLE", "Simple Configurator"),
                         new Values.Item("ADVANCED", "Advanced Configurator"),
                         new Values.Item("CUSTOM", "Custom MQL Editor")));
+    }
+
+    @Update("loadMQL")
+    public MQLQueryEditor loadMQL(@Option("self") final MQLQueryEditor editor, MQLQueryBuilder queryBuilder) {
+        String MQL = buildExecuteMQLPayload(queryBuilder, 100, 1).toString();
+        editor.setMQL(MQL);
+        return editor;
     }
 
     private JsonObject repositoryBrowse(BasicAuthDataStore dataStore, String TDCRepositoryPath, String TDCObjectTypes){
@@ -372,9 +403,9 @@ public class TDCAttributesService {
         int pageNumber = 1;
         JsonObject MQLQuery;
 
-        if (!dataSet.getQueryConfiguratorType().equals("CUSTOM"))
-            MQLQuery = buildExecuteMQLPayload(dataSet, pageSize, pageNumber);
-        else {
+        if (!dataSet.getQueryConfiguratorType().equals("CUSTOM")) {
+            MQLQuery = buildExecuteMQLPayload(dataSet.getQueryBuilder(), pageSize, pageNumber);
+        } else {
             String mql = dataSet.getQueryEditor().getMQL();
             JsonReader jsonReader = Json.createReader(new StringReader(mql));
             MQLQuery = jsonReader.readObject();
@@ -409,28 +440,33 @@ public class TDCAttributesService {
         return responseBody;
     }
 
-    private JsonObject buildExecuteMQLPayload(TDCAttributesDataSet dataSet, int pageSize, int pageNumber) {
+    private JsonObject buildExecuteMQLPayload(MQLQueryBuilder queryBuilder, int pageSize, int pageNumber) {
         JsonObject jsonPayload;
         JsonObjectBuilder builder = Json.createObjectBuilder();
 
         String selectClause = "";
-        String fromClause = dataSet.getQueryBuilder().getConfigurationPath();
+        String fromClause = queryBuilder.getConfigurationPath();
         String whereClause = "";
 
-        for (String attr: dataSet.getQueryBuilder().getAttributes()) {
-            selectClause = !selectClause.isEmpty()? selectClause + ",": selectClause;
-            selectClause += attr;
+        if (queryBuilder.getAttributes() != null) {
+            for (String attr : queryBuilder.getAttributes()) {
+                selectClause = !selectClause.isEmpty() ? selectClause + "," : selectClause;
+                selectClause += attr;
 
-            //whereClause = !whereClause.isEmpty()? whereClause + " OR ": whereClause;
-            //whereClause += attr + " exists";
+                //whereClause = !whereClause.isEmpty()? whereClause + " OR ": whereClause;
+                //whereClause += attr + " exists";
+            }
         }
 
         String catList = "";
-        for (String cat: dataSet.getQueryBuilder().getCategories()){
-            catList = !catList.isEmpty()? catList + ",": catList;
-            catList += "'" + cat + "'";
+        if (queryBuilder.getCategories() != null) {
+            for (String cat : queryBuilder.getCategories()) {
+                catList = !catList.isEmpty() ? catList + "," : catList;
+                catList += "'" + cat + "'";
+            }
+
+            whereClause += "category=ANY(" + catList + ")";
         }
-        whereClause += "category=ANY("+ catList + ")";
 
         jsonPayload = builder
                 .add("select", selectClause)

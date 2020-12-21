@@ -7,6 +7,7 @@ import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.action.BuiltInSuggestable;
 import org.talend.sdk.component.api.configuration.action.Proposable;
 import org.talend.sdk.component.api.configuration.action.Suggestable;
+import org.talend.sdk.component.api.configuration.action.Updatable;
 import org.talend.sdk.component.api.configuration.condition.ActiveIf;
 import org.talend.sdk.component.api.configuration.condition.ActiveIfs;
 import org.talend.sdk.component.api.configuration.constraint.Required;
@@ -14,6 +15,7 @@ import org.talend.sdk.component.api.configuration.constraint.Uniques;
 import org.talend.sdk.component.api.configuration.type.DataSet;
 import org.talend.sdk.component.api.configuration.ui.DefaultValue;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
+import org.talend.sdk.component.api.configuration.ui.widget.Structure;
 import org.talend.sdk.component.api.configuration.ui.widget.TextArea;
 import org.talend.sdk.component.api.meta.Documentation;
 
@@ -39,10 +41,10 @@ public class TDCAttributesDataSet implements Serializable {
     private BasicAuthDataStore dataStore;
 
     @Option
-    @Documentation("TODO fill the documentation for this parameter")
     @Proposable("loadMQLQueryConfiguratorTypes")
     @Required
     @DefaultValue("SIMPLE")
+    @Documentation("TODO fill the documentation for this parameter")
     private String queryConfiguratorType;
 
     @Option
@@ -54,11 +56,12 @@ public class TDCAttributesDataSet implements Serializable {
     @Option
     //Note: ActiveIfs added in the Object fields only as a workaround to Duplicate Key error
     //@ActiveIf(target = "queryConfiguratorType", value = "CUSTOM")
+    @Updatable(value = "loadMQL", after = "MQL", parameters = {".", "../queryBuilder"})
     @Documentation("TODO fill the documentation for this parameter")
     private MQLQueryEditor queryEditor = new MQLQueryEditor();
 
     @Option
-    @Documentation("TODO fill the documentation for this parameter")
     @Required
+    @Documentation("TODO fill the documentation for this parameter")
     private int numOfRecords = 1000;
 }

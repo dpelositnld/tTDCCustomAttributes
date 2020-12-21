@@ -58,8 +58,8 @@ public class TDCAttributesOutputConfiguration implements Serializable {
         private String field;
 
         @Option
+        //@Required
         @Suggestable(value = "loadChosenAttributes", parameters = { "../../dataSet" })
-        @Required
         @Documentation("")
         private String attribute;
     }
