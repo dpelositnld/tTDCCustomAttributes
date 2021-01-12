@@ -38,10 +38,12 @@ public class TDCAttributesService {
     public static final String INCOMING_PATHS_DYNAMIC = "INCOMING_PATHS_DYNAMIC";
 
     public TDCAttributesService(){
+        /*
         System.setProperty("http.proxyHost","host.docker.internal");
         System.setProperty("https.proxyHost","host.docker.internal");
         System.setProperty("http.proxyPort","8888");
         System.setProperty("https.proxyPort","8888");
+        */
     }
 
     @Service
@@ -91,6 +93,7 @@ public class TDCAttributesService {
         final Response<JsonObject> response = client.setAttributes("application/json", token, payload);
         if (response.status() == 200) {
             responseBody = response.body();
+            System.out.println("Write attributes response:" + responseBody.toString());
         } else
             throw new RuntimeException(response.error(String.class));
 
@@ -425,7 +428,7 @@ public class TDCAttributesService {
         else
             token = dataStore.getToken();
 
-        System.out.println("********" + MQLPayload.toString());
+        System.out.println("Execute MQL: " + MQLPayload.toString());
 
         Response<JsonObject> response = client.executeMQLQuery("application/json", token, MQLPayload);
 
@@ -558,7 +561,8 @@ public class TDCAttributesService {
 
         for (TDCAttributesOutputConfiguration.TDCAttribute entry: TDCAttributes) {
             String name = entry.getAttribute();
-            String value = record.getString(entry.getField());
+            String value = record.getString(entry.getField()) != null? record.getString(entry.getField()): "";
+
 
             JsonObjectBuilder jsonValue = Json.createObjectBuilder();
             JsonObjectBuilder jsonAttributeType = Json.createObjectBuilder();

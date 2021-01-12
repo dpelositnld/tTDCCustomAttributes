@@ -14,6 +14,7 @@ import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 import org.talend.sdk.component.api.service.schema.DiscoverSchema;
 
 import javax.json.JsonObject;
+import java.util.Properties;
 
 @Data
 @Service
@@ -67,6 +68,14 @@ public class AuthenticationService {
     }
 
     public JsonObject login(String username, String password) {
+        /*
+        Properties systemProps = System.getProperties();
+        systemProps.put("javax.net.ssl.keyStorePassword","password");
+        systemProps.put("javax.net.ssl.keyStore","c:/keystore.jks");
+        systemProps.put("javax.net.ssl.trustStore", "c:/keystore.jks");
+        systemProps.put("javax.net.ssl.trustStorePassword","password");
+        System.setProperties(systemProps);
+        */
         final Response<JsonObject> response = client.login(username, password, true);
         if (response.status() == 200) {
             return response.body();
