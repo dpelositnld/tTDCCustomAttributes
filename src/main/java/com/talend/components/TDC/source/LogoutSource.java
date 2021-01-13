@@ -1,6 +1,7 @@
 package com.talend.components.TDC.source;
 
-import com.talend.components.TDC.configuration.TDCInputConfiguration;
+import com.talend.components.TDC.configuration.TDCLoginInputConfiguration;
+import com.talend.components.TDC.configuration.TDCLogoutInputConfiguration;
 import com.talend.components.TDC.service.AuthenticationService;
 import org.talend.sdk.component.api.input.Producer;
 import org.talend.sdk.component.api.record.Record;
@@ -8,16 +9,17 @@ import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 
 import javax.annotation.PostConstruct;
 import javax.json.JsonObject;
+import java.io.Serializable;
 
-public class LogoutSource {
-    final TDCInputConfiguration configuration;
+public class LogoutSource implements Serializable {
+    final TDCLogoutInputConfiguration configuration;
     final RecordBuilderFactory recordBuilderFactory;
     final AuthenticationService service;
 
     private JsonObject response;
     private boolean recordConsumed = false;
 
-    public LogoutSource(TDCInputConfiguration configuration, RecordBuilderFactory recordBuilderFactory, AuthenticationService service) {
+    public LogoutSource(TDCLogoutInputConfiguration configuration, RecordBuilderFactory recordBuilderFactory, AuthenticationService service) {
         this.configuration = configuration;
         this.recordBuilderFactory = recordBuilderFactory;
         this.service = service;
@@ -25,7 +27,7 @@ public class LogoutSource {
 
     @PostConstruct
     public void init() {
-        String token = configuration.getDataSet().getLogoutConfiguration().getToken();
+        String token = configuration.getDataSet().getDataStore().getToken();
         if (token != null && !token.isEmpty())
             response = service.logout(token);
     }
@@ -43,10 +45,11 @@ public class LogoutSource {
             String result = response.getJsonString("result").getString();
 
             if (result != null) {
-                recordStatus = "SUCCESS";
+                recordStatus = "Logout successful";
+                recordMessage = "Token: " + configuration.getDataSet().getDataStore().getToken();
             } else {
                 JsonObject jsonError = response.getJsonObject("error");
-                recordStatus = "FAILED";
+                recordStatus = "Logout failed";
                 recordMessage = "Error Code: \"" + jsonError.getString("errorCode") + "\" Error Message: \"" + jsonError.getString("message") + "\"";
             }
             recordConsumed = true;

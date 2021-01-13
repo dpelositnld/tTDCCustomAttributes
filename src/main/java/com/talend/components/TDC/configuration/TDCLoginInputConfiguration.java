@@ -2,10 +2,9 @@ package com.talend.components.TDC.configuration;
 
 import java.io.Serializable;
 
-import com.talend.components.TDC.dataset.TDCInputDataSet;
+import com.talend.components.TDC.dataset.TDCAuthDataSet;
 import lombok.Data;
 import org.talend.sdk.component.api.configuration.Option;
-import org.talend.sdk.component.api.configuration.condition.ActiveIf;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
 
@@ -16,9 +15,9 @@ import org.talend.sdk.component.api.meta.Documentation;
         @GridLayout.Row({ "dataSet" })
 })
 @Documentation("TODO fill the documentation for this configuration")
-public class TDCInputConfiguration implements Serializable {
+public class TDCLoginInputConfiguration implements Serializable {
     @Option
     @Documentation("TODO fill the documentation for this parameter")
-    private TDCInputDataSet dataSet;
+    private TDCAuthDataSet dataSet;
 
 }

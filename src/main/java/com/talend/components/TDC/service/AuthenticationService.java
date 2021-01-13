@@ -1,7 +1,7 @@
 package com.talend.components.TDC.service;
 
 import com.talend.components.TDC.client.TDCAPIClient;
-import com.talend.components.TDC.dataset.TDCInputDataSet;
+import com.talend.components.TDC.dataset.TDCAuthDataSet;
 import com.talend.components.TDC.datastore.BasicAuthDataStore;
 import lombok.Data;
 import org.talend.sdk.component.api.configuration.Option;
@@ -14,7 +14,6 @@ import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
 import org.talend.sdk.component.api.service.schema.DiscoverSchema;
 
 import javax.json.JsonObject;
-import java.util.Properties;
 
 @Data
 @Service
@@ -23,12 +22,9 @@ public class AuthenticationService {
     TDCAPIClient client;
 
     @DiscoverSchema
-    public Schema guessSchema(@Option TDCInputDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
+    public Schema guessSchema(@Option TDCAuthDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
         Schema schema = null;
-        if (dataSet.getOperationType().equals(TDCInputDataSet.OperationType.Login))
-            schema = guessSchemaLogin(dataSet, recordBuilderFactory);
-        else if (dataSet.getOperationType().equals(TDCInputDataSet.OperationType.Logout))
-            schema = guessSchemaLogout(dataSet, recordBuilderFactory);
+        schema = guessSchemaLogin(dataSet, recordBuilderFactory);
         return schema;
     }
 
@@ -89,13 +85,13 @@ public class AuthenticationService {
         return response.getJsonObject("result").getString("token");
     }
 
-    private Schema guessSchemaLogin(TDCInputDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
+    private Schema guessSchemaLogin(TDCAuthDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
         Schema.Builder schemaBuilder = recordBuilderFactory.newSchemaBuilder(Schema.Type.RECORD);
         schemaBuilder.withEntry(recordBuilderFactory.newEntryBuilder().withName("token").withType(Schema.Type.STRING).withNullable(false).build());
         return schemaBuilder.build();
     }
 
-    private Schema guessSchemaLogout(TDCInputDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
+    private Schema guessSchemaLogout(TDCAuthDataSet dataSet, final RecordBuilderFactory recordBuilderFactory) {
         Schema.Builder schemaBuilder = recordBuilderFactory.newSchemaBuilder(Schema.Type.RECORD);
         schemaBuilder
                 .withEntry(recordBuilderFactory.newEntryBuilder().withName("logoutStatus").withType(Schema.Type.STRING).withNullable(false).build())

@@ -1,12 +1,12 @@
 package com.talend.components.TDC.configuration;
 
-import com.talend.components.TDC.dataset.TDCAttributesDataSet;
+import java.io.Serializable;
+
+import com.talend.components.TDC.dataset.TDCAuthDataSet;
 import lombok.Data;
 import org.talend.sdk.component.api.configuration.Option;
 import org.talend.sdk.component.api.configuration.ui.layout.GridLayout;
 import org.talend.sdk.component.api.meta.Documentation;
-
-import java.io.Serializable;
 
 @Data
 @GridLayout({
@@ -14,8 +14,9 @@ import java.io.Serializable;
         // customize it as much as needed
         @GridLayout.Row({ "dataSet" })
 })
-public class TDCAttributesInputConfiguration implements Serializable {
+@Documentation("TODO fill the documentation for this configuration")
+public class TDCLogoutInputConfiguration implements Serializable {
     @Option
     @Documentation("TODO fill the documentation for this parameter")
-    private TDCAttributesDataSet dataSet;
+    private TDCAuthDataSet dataSet;
 }
