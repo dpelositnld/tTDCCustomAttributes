@@ -24,10 +24,16 @@ import org.talend.sdk.component.api.service.http.Response;
 import org.talend.sdk.component.api.service.update.Update;
 
 import javax.json.*;
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.io.StringReader;
 import java.net.HttpCookie;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -203,13 +209,14 @@ public class TDCAttributesService {
         return items;
     }
 
-    private List<SuggestionValues.Item> getCustomAttributes(BasicAuthDataStore dataStore){
+    public List<SuggestionValues.Item> getCustomAttributes(BasicAuthDataStore dataStore){
         List<SuggestionValues.Item> items = new ArrayList<SuggestionValues.Item>();
 
         String username = dataStore.getUsername();
         String password = dataStore.getPassword();
 
-        String encodedPassword = "71fhv%106LJT%115jUF%111VDY%116edM%111fiY%121yoc%122sZB%120HMf%103WRx%122Wuo%117Oqz%120hHQ";
+        //String encodedPassword = "71fhv%106LJT%115jUF%111VDY%116edM%111fiY%121yoc%122sZB%120HMf%103WRx%122Wuo%117Oqz%120hHQ";
+        String encodedPassword = encryptPasswordWrapper(password);
 
         client.base(dataStore.getEndpoint());
 
@@ -219,6 +226,23 @@ public class TDCAttributesService {
             items.add(new SuggestionValues.Item("{"+ attrJson.getString("name") + "}", attrJson.getString("name") + " - CUSTOM ATTRIBUTE"));
         }
         return items;
+    }
+
+    public String encryptPasswordWrapper(String value){
+        String encryptedValue = "";
+        try {
+            ScriptEngineManager manager = new ScriptEngineManager(null);
+            ScriptEngine engine = manager.getEngineByName("JavaScript");
+// read script file
+            engine.eval(Files.newBufferedReader(Paths.get("/opt/talend/external/TDCEncrypt.js"), StandardCharsets.UTF_8));
+
+            Invocable inv = (Invocable) engine;
+// call function from script file
+            encryptedValue = (String)inv.invokeFunction("encrypt", value);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return encryptedValue;
     }
 
     @Suggestions("loadChosenAttributes")

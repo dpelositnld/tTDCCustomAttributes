@@ -215,4 +215,16 @@ class TDCAttributesServiceTest {
         service.loadTDCProfiles(config.getDataSet().getDataStore());
     }
 
+    @Test
+    public void getCustomAttributesTest(){
+        //service.getCustomAttributes(config.getDataSet().getDataStore());
+    }
+
+    @Test
+    public void encryptPasswordWrapperTest(){
+        //String encrypted = service.encryptPasswordWrapper("Administrator");
+        //System.out.println(encrypted);
+    }
+
+
 }
