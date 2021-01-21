@@ -95,13 +95,15 @@ public class TDCAttributesService {
             token = authService.getToken(username, password);
 
         JsonObject payload = buildSetAttributesTDCRestBody(record, TDCObjectID, TDCAttributes);
+        System.out.println("setAttributes payload" + payload.toString());
 
         final Response<JsonObject> response = client.setAttributes("application/json", token, payload);
         if (response.status() == 200) {
             responseBody = response.body();
             System.out.println("Write attributes response:" + responseBody.toString());
-        } else
+        } else {
             throw new RuntimeException(response.error(String.class));
+        }
 
         if (!isUseExistingSession)
             authService.logout(token);
@@ -209,6 +211,7 @@ public class TDCAttributesService {
         return items;
     }
 
+    //TODO: make an api call (today this is not available)
     public List<SuggestionValues.Item> getCustomAttributes(BasicAuthDataStore dataStore){
         List<SuggestionValues.Item> items = new ArrayList<SuggestionValues.Item>();
 
@@ -228,6 +231,7 @@ public class TDCAttributesService {
         return items;
     }
 
+    //TODO: change the function with the right one. This is a workaround I found to pass the encrypted password. This was got reverese engineering he TDC web application
     public String encryptPasswordWrapper(String value){
         String encryptedValue = "";
         try {
@@ -586,7 +590,6 @@ public class TDCAttributesService {
         for (TDCAttributesOutputConfiguration.TDCAttribute entry: TDCAttributes) {
             String name = entry.getAttribute();
             String value = record.getString(entry.getField()) != null? record.getString(entry.getField()): "";
-
 
             JsonObjectBuilder jsonValue = Json.createObjectBuilder();
             JsonObjectBuilder jsonAttributeType = Json.createObjectBuilder();
